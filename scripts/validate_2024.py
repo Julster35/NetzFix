@@ -32,7 +32,8 @@ from netzfix.sim.redispatch import redispatch
 
 REF = {
     "congestion_management_gwh": (30320, "Monitoringbericht 2025, PDF p. 23"),
-    "net_import_twh": (64.9 - 37.6, "Monitoringbericht 2025, PDF p. 23 (imports 64.9 - exports 37.6)"),
+    "net_import_twh": (64.9 - 37.6,
+                       "Monitoringbericht 2025, PDF p. 23 (imports 64.9 - exports 37.6)"),
     "tso_circuit_km": (38400, "Monitoringbericht 2025, PDF p. 18"),
     "peak_load_gw": (75.8, "Monitoringbericht 2025, PDF p. 18 (quarter-hour, 15 Jan 11:30-11:45)"),
 }
@@ -71,8 +72,8 @@ def main() -> None:
             "hours_unresolved": int((rd.unresolved > 0.5).sum()),
             "line_hours_over_limit_after": int((after > lim + 1e-3).sum()),
         }
-        monthly[f"limit_{lim}_up_plus_down_gwh"] = pd.Series(
-            (rd.up + rd.down_disp + rd.down_res).sum(axis=1), index=month).groupby(level=0).sum() / 1e3
+        vol = pd.Series((rd.up + rd.down_disp + rd.down_res).sum(axis=1), index=month)
+        monthly[f"limit_{lim}_up_plus_down_gwh"] = vol.groupby(level=0).sum() / 1e3
         over = (after > lim + 1e-3)
         for k in np.flatnonzero(over.any(axis=0)):
             comp, bid = pg.branches[k].split(":", 1)
