@@ -42,8 +42,8 @@ REF = {
 def _de_circuit_km(n) -> float:
     """Circuit km of lines with both ends in Germany (no border or equivalent lines)."""
     de = set(n.buses.index[n.buses.country == "DE"])
-    l = n.lines[n.lines.bus0.isin(de) & n.lines.bus1.isin(de)]
-    return float((l.length * l.num_parallel).sum())
+    de_lines = n.lines[n.lines.bus0.isin(de) & n.lines.bus1.isin(de)]
+    return float((de_lines.length * de_lines.num_parallel).sum())
 
 
 def main() -> None:
@@ -53,7 +53,6 @@ def main() -> None:
     n = pg.grid.network
     ctx = Context(ts=pg.ts, capacity=pg.capacity)
     r = pg.simulate(ctx)
-    lines = n.lines
     model = {
         "tso_circuit_km": float(_de_circuit_km(n)),
         "peak_load_gw": float(pg.ts.load.max() / 1e3),
