@@ -27,5 +27,10 @@ The Marktstammdatenregister (MaStR) is the BNetzA's official register of all Ger
 - 6,798,004 units operating in at least one month of 2024; fleet per month in [[Playground]].
 - Austrian Illwerke hydro/pumped storage (Kops, Vermunt, Obervermunt; ~1.5 GW) are in MaStR (German control area) and placed via powerplantmatching.
 
+## BNetzA Kraftwerksliste (checked 2026-11-03) `stated`
+- `Kraftwerksliste_CSV.csv` from https://www.bundesnetzagentur.de/DE/Fachthemen/ElektrizitaetundGas/Versorgungssicherheit/Erzeugungskapazitaeten/Kraftwerksliste/start.html, "Datenstand: 26.06.2026", source MaStR; latin-1, `;`, header row `Datensatztyp*;EinheitMastrNummer;...` after a preamble. 2,614 rows: 1,903 single units (>= 10 MW per site), 420 decommissioned, 290 aggregated small units.
+- `Spannungsebene` of single units (net MW): Hoechstspannung 190 units / 45,624 MW; Hochspannung 722 / 27,723 MW; Mittelspannung 743 / 7,153 MW; transformer levels and mixed entries the rest.
+- **Does not separate 220 from 380 kV**: "Hoechstspannung" covers both. E.g. Rheinhafen-Dampfkraftwerk Karlsruhe RDK 7/8/4S (517 + 834 + 239 + 114 MW) are "Hoechstspannung", TransnetBW. So it cannot fix the 220-vs-380 attachment question (Next Steps item 1); all model buses are 220/380 kV anyway. Not used in the model yet; could label assets with their connection level in the UI.
+
 ## Known issues (to check)
 - Small units often have only postcode-level location; coordinates missing for privacy below some size. `medium`
