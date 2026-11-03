@@ -1,1 +1,59 @@
 INFO:pypsa.network.io:Imported network 'Unnamed Network' has buses, carriers, lines, transformers
+limit 1.0: {'seconds': 111.5, 'volume_twh': {'up': np.float64(3.763), 'down_dispatchable': np.float64(1.217), 'down_curtail': np.float64(2.547), 'up_plus_down': np.float64(7.526)}, 'hours_with_redispatch': 4054, 'unresolved_mwh': 10852.4, 'hours_unresolved': 275, 'line_hours_over_limit_after': 275}
+limit 0.7: {'seconds': 519.4, 'volume_twh': {'up': np.float64(10.683), 'down_dispatchable': np.float64(3.124), 'down_curtail': np.float64(7.559), 'up_plus_down': np.float64(21.365)}, 'hours_with_redispatch': 7952, 'unresolved_mwh': 145651.1, 'hours_unresolved': 1545, 'line_hours_over_limit_after': 1847}
+{
+ "commit_at_run": "379ace7",
+ "model": {
+  "tso_circuit_km": 34200.52076,
+  "peak_load_gw": 75.50825,
+  "net_import_twh": 40.900469030000004,
+  "line_hours_over_100pct_before": 13843,
+  "line_hours_over_70pct_before": 92467
+ },
+ "redispatch": {
+  "limit_1.0": {
+   "seconds": 111.5,
+   "volume_twh": {
+    "up": 3.763,
+    "down_dispatchable": 1.217,
+    "down_curtail": 2.547,
+    "up_plus_down": 7.526
+   },
+   "hours_with_redispatch": 4054,
+   "unresolved_mwh": 10852.4,
+   "hours_unresolved": 275,
+   "line_hours_over_limit_after": 275
+  },
+  "limit_0.7": {
+   "seconds": 519.4,
+   "volume_twh": {
+    "up": 10.683,
+    "down_dispatchable": 3.124,
+    "down_curtail": 7.559,
+    "up_plus_down": 21.365
+   },
+   "hours_with_redispatch": 7952,
+   "unresolved_mwh": 145651.1,
+   "hours_unresolved": 1545,
+   "line_hours_over_limit_after": 1847
+  }
+ },
+ "reference": {
+  "congestion_management_gwh": {
+   "value": 30320,
+   "source": "Monitoringbericht 2025, PDF p. 23"
+  },
+  "net_import_twh": {
+   "value": 27.300000000000004,
+   "source": "Monitoringbericht 2025, PDF p. 23 (imports 64.9 - exports 37.6)"
+  },
+  "tso_circuit_km": {
+   "value": 38400,
+   "source": "Monitoringbericht 2025, PDF p. 18"
+  },
+  "peak_load_gw": {
+   "value": 75.8,
+   "source": "Monitoringbericht 2025, PDF p. 18 (quarter-hour, 15 Jan 11:30-11:45)"
+  }
+ }
+}

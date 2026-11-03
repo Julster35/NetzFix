@@ -3,13 +3,13 @@ type: reading-list
 date: 2026-11-03
 tags: [literature, reading-list]
 ai-first: true
-status: 8-pdfs-held
+status: 9-pdfs-held
 ---
 
 # Reading List
 
 ## For future agent
-This is the catalog of all literature for NetzFix. **Held** items have a PDF in `literature/pdfs/` and may be cited, but only for what has actually been read (see each note's `read:` field). **Not held** items must not be used as evidence (see the [[_CLAUDE#Section 0.25 - THE LITERATURE RULE (project-specific, non-negotiable)|literature rule]]). The synthesis is in [[Literature Synthesis]]. State as of 2026-11-03: 8 PDFs held.
+This is the catalog of all literature for NetzFix. **Held** items have a PDF in `literature/pdfs/` and may be cited, but only for what has actually been read (see each note's `read:` field). **Not held** items must not be used as evidence (see the [[_CLAUDE#Section 0.25 - THE LITERATURE RULE (project-specific, non-negotiable)|literature rule]]). The synthesis is in [[Literature Synthesis]]. State as of 2026-11-03: 9 PDFs held.
 
 ---
 
@@ -27,6 +27,7 @@ This is the catalog of all literature for NetzFix. **Held** items have a PDF in 
 | [[ENTSO-E 2025 BZR Report]] | BZR main report, DE2-DE5 | `ENTSO-E_2025_Bidding_Zone_Review_of_the_2025_Target_Year.pdf` | p. 6-8 |
 | [[ENTSO-E 2022 LMP Report]] | LMP study behind the BZR data | `ENTSO-E_2022_LMP_Report.pdf` | p. 3-4 |
 | [[EWI 2025 Policy Brief Gebotszonensplit]] | EWI brief on a DE split | `EWI_2025_Policy_Brief_Gebotszonensplit_in_Deutschland.pdf` | p. 4-5 |
+| [[BNetzA BKartA 2025 Monitoringbericht]] | Regulators' monitoring report covering 2024 (validation figures) | `BNetzA_BKartA_2025_Monitoringbericht_Energie_2025.pdf` | pp. 18, 22-23, 96, 119-122, 131-136 |
 | [[BNetzA 2024 Netzengpassmanagement Q4 2023]] | Congestion management Q4/2023 | `BNetzA_2024_Netzengpassmanagement_Q4_und_Gesamtjahr_2023.pdf` | p. 5, 7, 8 |
 
 ## To fetch next (grey literature and data documentation)

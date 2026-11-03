@@ -7,7 +7,7 @@ ai-first: true
 
 # NetzFix - Vault Index
 
-Catalog of every note, grouped by folder. Read this before searching. PDFs: `literature/pdfs/` (8 files as of 2026-11-03). Built by `scripts/build_index.py`.
+Catalog of every note, grouped by folder. Read this before searching. PDFs: `literature/pdfs/` (9 files as of 2026-11-03). Built by `scripts/build_index.py`.
 
 ## Root (1)
 
@@ -38,9 +38,10 @@ Catalog of every note, grouped by folder. Read this before searching. PDFs: `lit
 - [[Uniform Pricing and Redispatch]] - Design **A**: Germany (DE-LU) clears as one bidding zone with one price per hour, ignoring internal grid limits; the transmission operators then fix overloads by **redispatch** (raising units behind a congestion, lowe...
 - [[Zonal Pricing and Bidding Zones]] - Design **B**: DE-LU is split into 2-5 bidding zones with one price each; only the grid limits between zones are respected in the market, so intra-zonal congestion still needs redispatch.
 
-## Literature (10)
+## Literature (11)
 
 - [[BNetzA 2024 Netzengpassmanagement Q4 2023]] - BNetzA's quarterly congestion-management report for Q4 2023 with full-year 2023 figures (redispatch volumes, costs, curtailment, grid reserve).
+- [[BNetzA BKartA 2025 Monitoringbericht]] - The regulators' annual monitoring report covering 2024; NetzFix's main held source of real 2024 figures for validating the playground (congestion management, trade, grid length, peak load).
 - [[Brown Hoersch Schlachtberger 2018]] - The software paper for PyPSA, the modelling library NetzFix uses for all optimisations.
 - [[ENTSO-E 2022 LMP Report]] - ENTSO-E's report on the LMP study that produced the nodal prices and the dataset used by [[Knoerr Bichler Dobos 2025]].
 - [[ENTSO-E 2025 BZR Report]] - ENTSO-E's main report of the Bidding Zone Review (target year 2025).
