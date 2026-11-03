@@ -3,7 +3,7 @@ type: reading-list
 date: 2026-11-03
 tags: [literature, reading-list]
 ai-first: true
-status: 9-pdfs-held
+status: 10-sources-held
 ---
 
 # Reading List

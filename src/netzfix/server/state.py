@@ -192,9 +192,10 @@ class Playground:
         return [{k: a.get(k) for k in keep} for a in self.assets()]
 
     # ------------------------------------------------------------------ simulation
-    def simulate(self, ctx: Context, balancing: str = "keep_trade"):
+    def simulate(self, ctx: Context, balancing: str = "keep_trade", **kw):
         return simulate(self.assets(), self.buses, self.ptdf, self.branches, self.s_nom,
-                        self.grid.borders, ctx, balancing=balancing, gap_share=self.gap_share)
+                        self.grid.borders, ctx, balancing=balancing, gap_share=self.gap_share,
+                        **kw)
 
     def run(self, start: str, hours: int, balancing: str | None = None,
             seed: int | None = None, redispatch_limit: float | None = None) -> dict:

@@ -38,7 +38,7 @@ Catalog of every note, grouped by folder. Read this before searching. PDFs: `lit
 - [[Uniform Pricing and Redispatch]] - Design **A**: Germany (DE-LU) clears as one bidding zone with one price per hour, ignoring internal grid limits; the transmission operators then fix overloads by **redispatch** (raising units behind a congestion, lowe...
 - [[Zonal Pricing and Bidding Zones]] - Design **B**: DE-LU is split into 2-5 bidding zones with one price each; only the grid limits between zones are respected in the market, so intra-zonal congestion still needs redispatch.
 
-## Literature (11)
+## Literature (12)
 
 - [[BNetzA 2024 Netzengpassmanagement Q4 2023]] - BNetzA's quarterly congestion-management report for Q4 2023 with full-year 2023 figures (redispatch volumes, costs, curtailment, grid reserve).
 - [[BNetzA BKartA 2025 Monitoringbericht]] - The regulators' annual monitoring report covering 2024; NetzFix's main held source of real 2024 figures for validating the playground (congestion management, trade, grid length, peak load).
@@ -50,6 +50,7 @@ Catalog of every note, grouped by folder. Read this before searching. PDFs: `lit
 - [[Knoerr Bichler Dobos 2025]] - **The benchmark NetzFix must discuss its results against.** On ENTSO-E's Bidding Zone Review data for Germany (target year 2025), zonal splits into 2-4 zones cut total cost by less than 1%, nodal pricing by about 5-6%...
 - [[Literature Synthesis]] - What the PDFs we hold actually say about the cost of uniform vs zonal vs nodal pricing in Germany, as of 2026-11-03.
 - [[Reading List]] - This is the catalog of all literature for NetzFix.
+- [[SMARD 2025 Netzengpassmanagement 2024]] - The Bundesnetzagentur's SMARD article on congestion management in 2024 (published 2025-04-02), held as a saved HTML page.
 - [[Xiong et al 2025]] - Describes and validates the OpenStreetMap-based European high-voltage grid (>= 200 kV) that PyPSA-Eur uses as `base_network: osm`; it is NetzFix's network layer.
 
 ## Data sources (12)

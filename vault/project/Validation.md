@@ -60,3 +60,18 @@ The model must reproduce the 2024 German system closely enough before any A/B/C 
 - **Unresolved at 70%:** concentrated on a few 220 kV lines near the Austrian border (`merged_relation/3943784-220+1` 2,978 h; AT border lines `way/125690613-220`, `way/125690616-220` ~1,100 h each; `way/1293441399-220`, `way/1293441403-220`, `way/73306291-220` ~700 h). Measured AT flows are fixed and cannot be redispatched in our model; the OSM voltage/rating of this corridor is unchecked. `speculation` until checked.
 - **December 2024** dominates (7.0 TWh at ≤ 100%). Plausible given winter wind and the Q4 2024 cost spike reported in secondary sources (not held). `speculation`
 - **Next:** calibrate one line-margin factor between 0.7 and 1.0 so that annual redispatch matches 30.3 TWh, then check the monthly pattern and the regional split out of sample. Label it as calibration (one parameter, one target).
+
+### 2026-11-03 - Calibration of the line margin: PRE-REGISTRATION (written before any calibration run)
+Julien (2026-11-03): "can you go ahead with the calibration and then test?" Model state: v1 (neighbour equivalents + measured flows), commit of this entry.
+
+- **Calibrated parameter (one):** line margin `alpha`; redispatch keeps every real line (German and cross-border; not the fictitious equivalents) at or below `alpha * s_nom`. Grid alpha = 0.70, 0.75, ..., 1.00 (7 full-year runs, `jobs/calibrate.sh` on the chair server, `scripts/calibrate_margin.py`).
+- **Target (the only number used for fitting):** annual redispatch volume up + down = **24,565 GWh** = adjusted feed-in of market plants 22,777 GWh (= 14,454 down + 8,322 up) + reserve plants 1,788 GWh, 2024 ([[SMARD 2025 Netzengpassmanagement 2024]]). Countertrading (5,739 GWh) is excluded because the model fixes cross-border exchange at measured values.
+- **alpha\*:** linear interpolation of the annual volume between the two bracketing grid points; then one more full-year run at alpha\* (rounded to 3 decimals) for the tests. If the target lies outside the grid range, report that and do not extrapolate.
+- **Tests at alpha\* (not used for fitting), fixed now:**
+  - T1 renewables curtailment: real 9,374 GWh; pass if model within ±35% (6,093-12,655 GWh).
+  - T2 curtailment mix among offshore wind / onshore wind / solar: real 4,562 / 3,384 / 1,389 GWh (shares 48.9 / 36.2 / 14.9%); pass if every model share is within ±15 percentage points.
+  - T3 Q4 share: real Q4 2024 total measures 10,424 of 30,304 GWh (34.4%; includes countertrading and reserve); pass if model Q4 share of up + down within ±10 pp.
+  - T4 upward by fuel: real gas 4,151 and hard coal 3,792 GWh are the two largest; pass if the model's two largest upward carriers are gas and hard coal (any order).
+  - T5 renewables share of downward redispatch: real 9,374 / 14,454 = 64.9%; pass if model within ±15 pp.
+- Attribution to technologies: a bus's curtailment / upward / downward volume is split over technologies in proportion to their output / headroom / output at that bus and hour (`scripts/calibrate_margin.py`, smoke-tested on one week: sums match).
+- Whatever the outcome, all five tests are reported. Known handicaps stated in advance: national (not regional) weather profiles; minimum-volume instead of cost-ordered redispatch, so T4 depends only on headroom; offshore wind attached at 380 kV landing points.

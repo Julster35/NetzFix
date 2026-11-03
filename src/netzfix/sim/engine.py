@@ -51,6 +51,10 @@ class Result:
     res_bus: np.ndarray         # T x buses, MW non-dispatchable generation (curtailable)
     disp_bus: np.ndarray        # T x buses, MW dispatchable generation (can go down)
     headroom_bus: np.ndarray    # T x buses, MW dispatchable headroom (can go up)
+    # optional (track_carriers=True): per-carrier T x buses arrays, to attribute redispatch
+    res_by_carrier: dict | None = None
+    headroom_by_carrier: dict | None = None
+    disp_by_carrier: dict | None = None
 
 
 def historical_import(ts: pd.DataFrame) -> np.ndarray:
@@ -72,6 +76,7 @@ def simulate(
     ctx: Context,
     balancing: str = "keep_trade",
     gap_share: np.ndarray | None = None,
+    track_carriers: bool = False,
 ) -> Result:
     if balancing not in ("keep_trade", "border"):
         raise ValueError(balancing)
@@ -79,6 +84,18 @@ def simulate(
     bidx = {b: i for i, b in enumerate(buses)}
     inj = np.zeros((T, nb))
     res_bus = np.zeros((T, nb))
+    res_c: dict[str, np.ndarray] = {}
+    head_c: dict[str, np.ndarray] = {}
+    disp_c: dict[str, np.ndarray] = {}
+
+    def track(store: dict, c: str, i, x) -> None:
+        if track_carriers:
+            if c not in store:
+                store[c] = np.zeros((T, nb))
+            if i is None:
+                store[c] += x
+            else:
+                store[c][:, i] += x
     carriers: dict[str, np.ndarray] = {}
     disp_rows: list[np.ndarray] = []
     disp_pmax: list[np.ndarray] = []
@@ -107,6 +124,7 @@ def simulate(
             gen = cap_t * cf                                   # buses x T
             inj += gen.T
             res_bus += gen.T
+            track(res_c, carrier, None, gen.T)
             add_carrier(carrier, gen.sum(axis=0))
 
     # 2) everything else, asset by asset
@@ -127,6 +145,7 @@ def simulate(
             inj[:, i] += x
             if a["kind"] == "producer":
                 res_bus[:, i] += x
+                track(res_c, c, i, x)
             add_carrier(c, x)
 
     # 2b) domestic gap between SMARD balance and measured border flows ("unmetered")
@@ -161,6 +180,8 @@ def simulate(
         inj[:, i] += disp[k]
         disp_bus[:, i] += disp[k]
         headroom_bus[:, i] += np.clip(pmax[k] - disp[k], 0, None)
+        track(head_c, c, i, np.clip(pmax[k] - disp[k], 0, None))
+        track(disp_c, c, i, disp[k])
         add_carrier(c, disp[k])
 
     border_total = -inj.sum(axis=1)                            # + = import
@@ -192,4 +213,6 @@ def simulate(
         border=border,
         trade_deviation=border_total - target,
         res_bus=res_bus, disp_bus=disp_bus, headroom_bus=headroom_bus,
+        res_by_carrier=res_c or None, headroom_by_carrier=head_c or None,
+        disp_by_carrier=disp_c or None,
     )
