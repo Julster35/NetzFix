@@ -1,0 +1,40 @@
+INFO:pypsa.network.io:Imported network 'Unnamed Network' has buses, carriers, lines, transformers
+{
+ "alpha": 0.942,
+ "commit_at_run": "c80998d",
+ "seconds": 233.2,
+ "gwh": {
+  "up": 12193.202025526572,
+  "down_dispatchable": 3998.2763722582795,
+  "down_curtail": 8194.925653268296,
+  "up_plus_down": 24386.40405105315
+ },
+ "unresolved_gwh": 126.38865684744177,
+ "hours_unresolved": 567,
+ "quarter_gwh": {
+  "1": 6829.353546726538,
+  "2": 690.4832840093292,
+  "3": 2844.7958071396674,
+  "4": 14021.771413177614
+ },
+ "curtail_by_carrier_gwh": {
+  "biomass": 690.2655048638757,
+  "hydro": 283.10995511870453,
+  "other_renewable": 36.68476018871421,
+  "solar": 1161.776797721398,
+  "wind_offshore": 1121.1815441119718,
+  "wind_onshore": 4901.907091263632
+ },
+ "up_by_carrier_gwh": {
+  "gas": 5318.671953570992,
+  "hard_coal": 3501.838858090642,
+  "lignite": 845.4701667792434,
+  "other_conventional": 2527.221047085696
+ },
+ "down_disp_by_carrier_gwh": {
+  "gas": 951.5797411958162,
+  "hard_coal": 1142.3501479144375,
+  "lignite": 1648.4816403716388,
+  "other_conventional": 255.86484277638718
+ }
+}

@@ -75,3 +75,21 @@ Julien (2026-11-03): "can you go ahead with the calibration and then test?" Mode
   - T5 renewables share of downward redispatch: real 9,374 / 14,454 = 64.9%; pass if model within ±15 pp.
 - Attribution to technologies: a bus's curtailment / upward / downward volume is split over technologies in proportion to their output / headroom / output at that bus and hour (`scripts/calibrate_margin.py`, smoke-tested on one week: sums match).
 - Whatever the outcome, all five tests are reported. Known handicaps stated in advance: national (not regional) weather profiles; minimum-volume instead of cost-ordered redispatch, so T4 depends only on headroom; offshore wind attached at 380 kV landing points.
+
+### 2026-11-03 - Calibration of the line margin: RESULTS
+- Runs: Slurm array **5597** on the chair server (alpha 0.70-0.90; code = `git archive` of `794dd32`, `commit_at_run` empty there because the server copy has no `.git`; file `CODE_COMMIT` = 794dd32) and the laptop (alpha 0.95, 1.00, 0.942; code unchanged since 794dd32). Files `results/calibration/alpha_*.json`, `report.json`; scripts `scripts/calibrate_margin.py`, `scripts/calibration_report.py`. Server tasks took 5-16 min each.
+- Grid (annual up + down, GWh): 0.70 → 71,366; 0.75 → 58,028; 0.80 → 47,664; 0.85 → 39,009; 0.90 → 30,657; 0.95 → 23,349; 1.00 → 17,826. Monotone.
+- **alpha\* = 0.942** (interpolated between 0.90 and 0.95, as pre-registered). Run at 0.942: 24,386 GWh vs target 24,565 (−0.7%); unresolved 126 GWh.
+
+| Test (pre-registered) | Model at 0.942 | Real 2024 | Verdict |
+|---|---|---|---|
+| T1 renewables curtailment | 8,195 GWh | 9,374 GWh | **pass** (−12.6%) |
+| T2 curtailment mix offshore / onshore / solar | 15.6 / 68.2 / 16.2% | 48.9 / 36.3 / 14.9% | **fail** (offshore −33 pp, onshore +32 pp; solar passes) |
+| T3 Q4 share of annual volume | 57.5% | 34.4% | **fail** (+23 pp) |
+| T4 two largest upward carriers | gas 5,319, hard coal 3,502 GWh | gas 4,151, hard coal 3,792 GWh | **pass** |
+| T5 renewables share of downward | 67.2% | 64.9% | **pass** |
+
+- **3 of 5 pass.** The grid model with one fitted parameter reproduces the total volume, the amount of renewables curtailment, the conventional fuels ramped up, and the up/down composition.
+- **T2 (offshore vs onshore) fails.** Hypotheses, not tested: (a) offshore wind attaches at the 380 kV landing substations and the offshore connection systems (platforms, export cables) are not in the OSM set, so congestion on the offshore connections and around the landing points is missing; (b) minimum-volume redispatch is indifferent between technologies, while real practice follows cost and minimum factors; (c) all wind follows one national profile. `speculation`
+- **T3 (Q4) fails at every margin** (44-60% across the grid), so it is structural, not caused by the calibration. Hypotheses, not tested: winter interaction of the measured border flows with the national wind profile; real operators also use countertrading (in the real Q4 total) and forecasts. `speculation`
+- **Consequence:** the playground's redispatch default becomes "lines ≤ 94.2% (calibrated)". The failures are documented limits; do not quote seasonal or offshore-vs-onshore redispatch results from the model yet.
