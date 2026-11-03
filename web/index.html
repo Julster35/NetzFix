@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NetzFix Playground</title>
+  </head>
+  <body>
+    <div id="map"></div>
+
+    <header id="kpis">
+      <div class="brand">NetzFix <span>playground · 2024 grid</span></div>
+      <div class="kpi"><label>Hour</label><b id="k-time">–</b></div>
+      <div class="kpi"><label>Load</label><b id="k-load">–</b></div>
+      <div class="kpi"><label>Renewables</label><b id="k-res">–</b></div>
+      <div class="kpi"><label>Net import</label><b id="k-imp">–</b></div>
+      <div class="kpi"><label>Price DE-LU</label><b id="k-price">–</b></div>
+      <div class="kpi"><label>Max line loading</label><b id="k-max">–</b></div>
+      <div class="kpi"><label>Lines &gt;70% / &gt;100%</label><b id="k-over">–</b></div>
+      <button id="btn-method" class="ghost">Data &amp; method</button>
+    </header>
+
+    <aside id="left" class="panel">
+      <h3>Run</h3>
+      <label>Start <input id="in-start" type="datetime-local" value="2024-01-15T00:00" min="2024-01-01T00:00" max="2024-12-31T00:00" /></label>
+      <label>Length <select id="in-hours"><option value="24">1 day</option><option value="168" selected>1 week</option><option value="720">30 days</option></select></label>
+      <label>Balancing
+        <select id="in-bal">
+          <option value="keep_trade" selected>keep 2024 trade (dispatchables absorb edits)</option>
+          <option value="border">border absorbs everything</option>
+        </select>
+      </label>
+      <label>Seed <input id="in-seed" type="number" value="0" /></label>
+      <button id="btn-run">Simulate</button>
+      <div id="run-status" class="muted"></div>
+
+      <h3>Layers</h3>
+      <label class="chk"><input type="checkbox" id="ly-lines" checked /> Lines by loading</label>
+      <label class="chk"><input type="checkbox" id="ly-flow" checked /> Flow direction</label>
+      <label class="chk"><input type="checkbox" id="ly-inj" checked /> Net injection per substation</label>
+      <label class="chk"><input type="checkbox" id="ly-assets" /> Producers &amp; storage (MW)</label>
+      <label class="chk"><input type="checkbox" id="ly-border" checked /> Border points</label>
+
+      <h3>Scenario</h3>
+      <div class="row"><select id="sc-list"></select><button id="sc-load" class="ghost">Load</button></div>
+      <div class="row"><input id="sc-name" placeholder="name" /><button id="sc-save" class="ghost">Save</button></div>
+      <button id="btn-place" class="ghost">+ Place new asset on map</button>
+      <div id="edits" class="muted"></div>
+    </aside>
+
+    <aside id="right" class="panel hidden">
+      <button id="close-right" class="x">×</button>
+      <div id="right-body"></div>
+    </aside>
+
+    <footer id="timebar">
+      <button id="btn-play">▶</button>
+      <div class="speeds">
+        <button data-speed="1" class="on">1×</button><button data-speed="5">5×</button
+        ><button data-speed="10">10×</button><button data-speed="20">20×</button>
+      </div>
+      <input id="slider" type="range" min="0" max="0" value="0" />
+      <canvas id="mix" height="70"></canvas>
+    </footer>
+
+    <div id="legend" class="panel">
+      <div class="grad"></div>
+      <div class="ticks"><span>0%</span><span>50%</span><span>70%</span><span>100%</span><span>&gt;100%</span></div>
+      <div class="muted">line loading = |flow| / s_nom · n-1 proxy at 70%</div>
+    </div>
+
+    <div id="modal" class="hidden"><div class="panel" id="modal-body"></div></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

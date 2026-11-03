@@ -1,0 +1,155 @@
+{
+ "commit_at_run": "5659c92",
+ "hours": 8784,
+ "branches": 1172,
+ "buses": 780,
+ "assets": 6911,
+ "line_hours_over_70pct": 92467,
+ "line_hours_over_100pct": 13843,
+ "share_line_hours_over_100pct": 0.00134,
+ "branches_ever_over_100pct": 51,
+ "max_trade_deviation_mw": 0.0,
+ "energy_twh": {
+  "biomass": 36.2,
+  "hydro": 17.55,
+  "other_renewable": 1.06,
+  "solar": 63.15,
+  "wind_offshore": 25.67,
+  "wind_onshore": 112.56,
+  "pumped_hydro": -2.66,
+  "battery": 0.0,
+  "other_storage": 0.0,
+  "load": 465.5,
+  "gas": 56.93,
+  "hard_coal": 27.34,
+  "lignite": 70.97,
+  "other_conventional": 15.85
+ },
+ "smard_energy_twh": {
+  "solar": 63.15,
+  "wind_onshore": 112.56,
+  "wind_offshore": 25.67,
+  "biomass": 36.2,
+  "hydro": 17.55,
+  "lignite": 70.99,
+  "hard_coal": 27.34,
+  "gas": 56.92,
+  "other_conventional": 15.84,
+  "other_renewable": 1.06,
+  "load": 465.5
+ },
+ "capacity_factor_check": {
+  "solar": {
+   "max_cf": 0.57,
+   "clipped_gwh": 0.0
+  },
+  "wind_onshore": {
+   "max_cf": 0.756,
+   "clipped_gwh": 0.0
+  },
+  "wind_offshore": {
+   "max_cf": 0.87,
+   "clipped_gwh": 0.0
+  },
+  "biomass": {
+   "max_cf": 0.563,
+   "clipped_gwh": 0.0
+  },
+  "hydro": {
+   "max_cf": 0.569,
+   "clipped_gwh": 0.0
+  },
+  "lignite": {
+   "max_cf": 1.063,
+   "clipped_gwh": 17.1
+  },
+  "hard_coal": {
+   "max_cf": 0.649,
+   "clipped_gwh": 0.0
+  },
+  "gas": {
+   "max_cf": 0.552,
+   "clipped_gwh": 0.0
+  },
+  "other_conventional": {
+   "max_cf": 0.196,
+   "clipped_gwh": 0.0
+  },
+  "other_renewable": {
+   "max_cf": 1.095,
+   "clipped_gwh": 1.8
+  }
+ },
+ "top_branches": [
+  {
+   "branch": "Line:merged_relation/14650605:b-220+1",
+   "v_kv": 220.0,
+   "s_nom": 491.6,
+   "max_loading": 3.951,
+   "hours_over_100pct": 3067
+  },
+  {
+   "branch": "Line:way/202171172-220",
+   "v_kv": 220.0,
+   "s_nom": 983.1,
+   "max_loading": 1.783,
+   "hours_over_100pct": 2056
+  },
+  {
+   "branch": "Line:way/60725324-380",
+   "v_kv": 380.0,
+   "s_nom": 1698.1,
+   "max_loading": 1.51,
+   "hours_over_100pct": 914
+  },
+  {
+   "branch": "Line:way/41642831-220",
+   "v_kv": 220.0,
+   "s_nom": 491.6,
+   "max_loading": 1.47,
+   "hours_over_100pct": 582
+  },
+  {
+   "branch": "Line:way/42861709-380",
+   "v_kv": 380.0,
+   "s_nom": 1698.1,
+   "max_loading": 1.441,
+   "hours_over_100pct": 731
+  },
+  {
+   "branch": "Line:way/26186272-220",
+   "v_kv": 220.0,
+   "s_nom": 491.6,
+   "max_loading": 1.392,
+   "hours_over_100pct": 165
+  },
+  {
+   "branch": "Line:relation/15097913-380",
+   "v_kv": 380.0,
+   "s_nom": 1698.1,
+   "max_loading": 1.387,
+   "hours_over_100pct": 1061
+  },
+  {
+   "branch": "Line:relation/15097914-380",
+   "v_kv": 380.0,
+   "s_nom": 1698.1,
+   "max_loading": 1.387,
+   "hours_over_100pct": 1059
+  },
+  {
+   "branch": "Line:relation/14510606-380",
+   "v_kv": 380.0,
+   "s_nom": 1698.1,
+   "max_loading": 1.378,
+   "hours_over_100pct": 447
+  },
+  {
+   "branch": "Line:relation/14510605-380",
+   "v_kv": 380.0,
+   "s_nom": 1698.1,
+   "max_loading": 1.378,
+   "hours_over_100pct": 447
+  }
+ ]
+}

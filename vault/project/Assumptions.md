@@ -31,3 +31,14 @@ Every modelling assumption, with an ID that `config/default.yaml` refers to, its
 | A14 | Fuel & CO2 prices | 2024 monthly/daily averages, cited (to cite: EEX/ICE via a public source, EU ETS) | to cite | - |
 | A15 | Investment cost & WACC | DEA catalogue or PyPSA technology-data (pinned); WACC [to decide] | to cite | - |
 | A16 | Demand | inelastic, no lost load (VoLL as slack only, cost reported) | Standard; same as [[Knoerr Bichler Dobos 2025]] (p. 10) | stated |
+
+## Playground v0 (added 2026-11-03, see [[Decision Log]] "Re-scope")
+| ID | Assumption | Default | Source / reason | Conf. |
+|---|---|---|---|---|
+| A12 v0 | Demand regionalisation | SMARD hourly DE load × bus share; share = NUTS3 population (Eurostat, 1 Jan 2024) split over bus Voronoi cells by area overlap | No nodal demand published; industry not located (weakest layer) | medium |
+| A17 | Grid as is | DE buses of the largest AC-connected component of OSM v0.7 (780 of 785 DE buses); transformers x = 0.1 p.u. (PyPSA-Eur default) | `src/netzfix/network/grid.py` | stated |
+| A18 | Border | 45 border points (41 AC lines, 4 HVDC); border injection split pro rata to capacity; neighbouring grids not modelled | Simplest closure without ENTSO-E flows | medium |
+| A19 | Fleet as is | MaStR units with commissioning ≤ 2024-12-31 and no final decommissioning before 2025-01-01; ≥ 10 MW individual, smaller aggregated per bus × technology; nearest substation | Julien's granularity choice | medium |
+| A20 | Behaviour as is | unit output = rated MW × national hourly 2024 capacity factor of its technology (SMARD ÷ MaStR capacity) | No regional weather in v0 (ERA5 needs CDS login) | medium |
+| A21 | Balancing | keep 2024 net import (SMARD load + pumped load − generation); scenario edits absorbed pro rata by lignite, hard coal, gas, other conventional; remainder at the border, reported | Playground default; no merit order yet | medium |
+| A22 | Stochastic modifiers | AR(1) multiplicative noise; two-state Markov outages; parameters are user inputs, never shipped as data | Julien: "simulation based on known distributions" | high |

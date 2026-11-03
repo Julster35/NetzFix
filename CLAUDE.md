@@ -22,7 +22,7 @@ The vault manual above governs research conduct (AI-first notes, literature rule
 - No numbers that look like data in code. Inputs come from `data/` (with a MANIFEST row) or `config/` (with an assumption ID).
 - Every downloader: cache in `data/raw/`, retry with exponential backoff, append a MANIFEST row with sha256. If a source fails or needs a login: stop and tell Julien.
 - Secrets only in `.env` (`ENTSOE_API_TOKEN`), never committed or logged.
-- open-mastr (AGPL) is used only in `scripts/download_mastr.py`; `src/netzfix` must not import it.
+- MaStR is parsed by our own streaming parser (`src/netzfix/data/mastr.py`); open-mastr 1.0.0 failed on the 2026-11-03 export and is not used (no AGPL dependency).
 - Market-engine changes need a toy-network test with a hand-computed answer (`tests/`).
 - Results are written by scripts, cite run ID + commit, and get an Analysis Log entry **before** the result is looked at.
 - Web twin shows real model output only; a dev fixture must be labelled on screen.

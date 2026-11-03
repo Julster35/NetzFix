@@ -15,12 +15,13 @@ Status 2026-11-03: Milestone 0 done, waiting for Julien's review.
 
 **Key risk:** in a linear model, A with fully flexible cost-based redispatch equals C. The A-vs-C gap measures redispatch frictions (restricted pool, RES priority, fixed storage schedules, unit commitment). These must be decided (O1), calibrated, and frozen before the bet is settled.
 
-## Milestones
+## Milestones (re-ordered 2026-11-03: playground first, see Decision Log "Re-scope")
 | # | Milestone | Ends with |
 |---|---|---|
 | 0 | Scaffold repo + vault, verify prior art, design | ✅ 2026-11-03, review by Julien |
-| 1 | End-to-end skeleton: ~30 DE buses, 1 week 2024, real MaStR + atlite + ENTSO-E load; designs A and C; toy-network tests; web export; first local map with line loading, nodal prices, time slider | Analysis Log #1 (smoke test, not a result); run < 30 min on laptop |
-| 2 | Full data layers: all of 2024 (3 h → hourly), demand regionalisation, fuel/CO2 prices, cross-border, conventional calibration | data notes complete, MANIFEST complete |
+| 1 | **Playground v0**: 2024 grid as is (OSM v0.7, 780 buses), MaStR fleet (≥ 10 MW single, rest per substation), SMARD 2024 behaviours, population-based demand, stochastic modifiers, DC flows; local web UI (map, loading, flow animation, time playback, add/edit assets, scenarios) | `uv run netzfix serve` works; engine tests pass |
+| 1b | Playground v1: regional weather (ERA5/atlite, needs CDS key), ENTSO-E per-unit generation and cross-border flows (needs token), better demand (DemandRegio), merit-order behaviour with cited fuel/CO2 prices, Monte Carlo runs, DE/EN UI | validation of "as is" flows vs published congestion |
+| 2 | Market designs A and C on the playground network (optimisation), toy-network tests | Analysis Log #1 (smoke test) |
 | 3 | Design B (DE2, DE5 zone maps digitised; inter-zonal capacities); redispatch frictions per O1; BZR data downloaded for cross-validation | all three designs run on one week |
 | 4 | Validation (V1-V7) at 50+ buses, full year | Validation note passes or Julien accepts failures |
 | 5 | **Freeze hypotheses + OpenTimestamps anchor**, then A/B/C base + sensitivities | results logged against H1-H3 |

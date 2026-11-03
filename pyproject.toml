@@ -4,14 +4,31 @@ version = "0.0.1"
 description = "Open-data German transmission grid model: uniform vs zonal vs nodal pricing"
 authors = [{ name = "Julien Froidefond" }]
 requires-python = ">=3.11"
-# Milestone 0 keeps runtime deps minimal. Milestone 1 adds pypsa, linopy, highspy, atlite,
-# geopandas, entsoe-py, open-mastr with exact pins (see RESEARCH_PLAN.md).
+# open-mastr (AGPL) is deliberately NOT a dependency: see scripts/download_mastr.py.
 dependencies = [
     "pyyaml>=6",
+    "requests>=2.32",
+    "numpy>=2",
+    "pandas>=2.2",
+    "pyarrow>=17",
+    "scipy>=1.13",
+    "shapely>=2",
+    "pypsa==1.4.0",
+    "highspy>=1.7",
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+    "networkx>=3.6.1",
 ]
 
+[project.scripts]
+netzfix = "netzfix.cli:main"
+
 [dependency-groups]
-dev = ["pytest>=8", "ruff>=0.6"]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=8",
+    "ruff>=0.6",
+]
 
 [build-system]
 requires = ["hatchling"]
