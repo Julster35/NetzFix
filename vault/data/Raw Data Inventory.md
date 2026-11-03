@@ -20,4 +20,6 @@ What has been downloaded into `data/raw/` (git-ignored), by which code, and its 
 | Eurostat population NUTS3 | `netzfix.data.regions` | `data/raw/eurostat/demo_r_pjanaggr3_DE_2024.json` | 400 regions, 83.46 M (1 Jan 2024) | ✅ |
 | GISCO NUTS 2024 L3 | `netzfix.data.regions` | `data/raw/gisco/NUTS3_2024.geojson` | boundaries | ✅ |
 | GISCO LAU 2024 | `netzfix.data.regions` | `data/raw/gisco/LAU_2024.geojson` → `data/processed/lau_DE_2024_points.parquet` | 10,978 DE municipalities with POP_2024 | ✅ |
+| Energy-Charts cross-border physical flows ([[Energy-Charts]]) | `netzfix.data.energy_charts` | `data/raw/energy_charts/cbpf_de_2024_MM.json` → `data/processed/cbpf_DE_2024.parquet` | 11 neighbours, hourly 2024, no gaps | ✅ |
+| BNetzA Kraftwerksliste | (manual check) | `data/raw/bnetza/Kraftwerksliste_CSV.csv` | units >= 10 MW, connection level | ✅ (not used in model) |
 | ENTSO-E, ERA5, BZR | – | – | – | not downloaded (token / CDS key / Milestone 3) |

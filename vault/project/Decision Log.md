@@ -12,6 +12,13 @@ This is the record of design decisions for NetzFix, newest first, each with who 
 
 ---
 
+## 2026-11-03 - Neighbours as Kron-reduced equivalents with measured flows (Julien asked, Claude designed)
+**Decision:** Julien: "can we roughly model these outside connections without modeling the whole country? again can we leverage old data here?" Each AC neighbour is reduced from its own OSM grid (already downloaded) to its border substations + a hub; the hourly 2024 physical flow per country from the Energy-Charts API (public, CC BY 4.0) is injected at the hub. Replaces v0 (SMARD residual split by line capacity).
+**Why:** v0 put the SMARD residual (40.9 TWh) at the borders although the measured net import was 25.1 TWh, and split it by capacity (e.g. CH 26%, NO 2%; measured PL and CZ are export borders). A first v1 with one copper-plate node per country created ~4 GW of fake transit through NL (gross 5.5 GW on NL border lines vs 1.3 GW net, week of 15 Jan 2024); the Kron equivalent cut it to 3.2 GW.
+**Consequences:** 818 buses (38 neighbour buses), 60 equivalent lines; the SMARD gap (15.8 TWh) is domestic (A21b). Validation re-run ([[Validation]]).
+
+---
+
 ## 2026-11-03 - Own MaStR parser; powerplantmatching for plant locations (Claude)
 **Decision:** parse the MaStR bulk export with our own streaming parser (`src/netzfix/data/mastr.py`) instead of open-mastr; take coordinates of large plants from powerplantmatching v0.9.1 (CC-BY-4.0), matched by MaStR unit number. Supersedes "open-mastr only in a standalone script" in the Part 0 entry below.
 **Why:** open-mastr 1.0.0 failed on all solar files and on the combustion file of the 2026-11-03 export (list-valued catalogue fields; log in `data/raw/mastr/logs/open_mastr.log`), which would have silently dropped ~6.6 M solar units and all coal/gas units. The public export has no coordinates for most large plants; district-centre placement stacked e.g. Knapsack I/II and Basell Wesseling onto one 220 kV node.

@@ -43,3 +43,20 @@ The model must reproduce the 2024 German system closely enough before any A/B/C 
 - **Reading:** the grid model produces congestion of the right order of magnitude. Our redispatch is a minimum-volume lower bound and leaves out n-1 contingency analysis, countertrading (in the BNetzA total, p. 23), possibly measures for 110 kV distribution-grid congestion (whether the total includes them is not stated on p. 23), forecast errors and regional weather. So staying below 30.3 TWh is expected; 21.4 TWh at the 70% proxy is a reasonable bracket. `medium`
 - **Unresolved overloads:** almost all at 70% sit on one 220 kV line near the Austrian border (`way/41642831-220`, 11.3°E 47.6°N, 1,533 h). Likely cause: fixed border injections that our redispatch cannot change. `speculation` until checked.
 - **Not checked (needs ENTSO-E token):** physical flows per border, plant-level output, prices. The Monitoringbericht's per-border physical flows (Abbildung 66, p. 135) are a chart without numbers in the PDF text.
+
+### 2026-11-03 - v1: neighbour equivalents + measured border flows (descriptive check)
+- Same script `scripts/validate_2024.py`, commit at run `bed649b`; outputs in `results/validation_2024/` (v0 kept as `summary_v0_capacity_split.json`, `redispatch_by_month_v0.csv`, `unresolved_branches_v0.csv`). Change vs v0: [[Decision Log]] "Neighbours as Kron-reduced equivalents" ([[Assumptions]] A18 v1, A21b).
+
+| | v0 (capacity split) | v1 (equivalents + measured flows) | Real 2024 |
+|---|---|---|---|
+| Net import at the borders | 40.9 TWh | 25.14 TWh ([[Energy-Charts]]) | 25.1 physical / 27.3 commercial (Monitoringbericht p. 23) |
+| Domestic unmetered gap | 0 | 15.76 TWh (spread like demand) | – |
+| Line-hours > 100% before redispatch | 13,843 | 17,912 | – |
+| Redispatch up + down, ≤ 100% | 7.53 TWh | **17.83 TWh** (up 8.91, down 2.90 + curtail 6.01); 71.7 GWh unresolved in 417 h | ~30.3 TWh |
+| Redispatch up + down, ≤ 70% | 21.37 TWh | **71.37 TWh** (up 35.68, down 14.19 + curtail 21.49); 975 GWh unresolved in 3,750 h | ~30.3 TWh |
+| Monthly (≤ 100%), GWh | Jan 1,916 … Dec 1,273 | Jan 2,475, Feb 1,553, Aug 1,092, Nov 3,400, **Dec 7,032**; Jun 37 | monthly 2024 not held |
+
+- **Reading:** with measured border flows the real volume lies between the two line limits: ≤ 100% gives 59% of it, a flat 70% on every line gives 235%. A uniform 0.7 n-1 proxy is too strict for operations (real operators use line-specific margins, dynamic line rating, curative measures, and reserve plants). `medium`
+- **Unresolved at 70%:** concentrated on a few 220 kV lines near the Austrian border (`merged_relation/3943784-220+1` 2,978 h; AT border lines `way/125690613-220`, `way/125690616-220` ~1,100 h each; `way/1293441399-220`, `way/1293441403-220`, `way/73306291-220` ~700 h). Measured AT flows are fixed and cannot be redispatched in our model; the OSM voltage/rating of this corridor is unchecked. `speculation` until checked.
+- **December 2024** dominates (7.0 TWh at ≤ 100%). Plausible given winter wind and the Q4 2024 cost spike reported in secondary sources (not held). `speculation`
+- **Next:** calibrate one line-margin factor between 0.7 and 1.0 so that annual redispatch matches 30.3 TWh, then check the monthly pattern and the regional split out of sample. Label it as calibration (one parameter, one target).

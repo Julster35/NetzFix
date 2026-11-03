@@ -52,11 +52,12 @@ Catalog of every note, grouped by folder. Read this before searching. PDFs: `lit
 - [[Reading List]] - This is the catalog of all literature for NetzFix.
 - [[Xiong et al 2025]] - Describes and validates the OpenStreetMap-based European high-voltage grid (>= 200 kV) that PyPSA-Eur uses as `base_network: osm`; it is NetzFix's network layer.
 
-## Data sources (11)
+## Data sources (12)
 
 - [[BZR dataset]] - The ENTSO-E Bidding Zone Review data are publicly downloadable (checked 2026-11-03).
 - [[Data Sources]] - Master list of every NetzFix data source, the layer it feeds, its access status and its note.
 - [[DemandRegio]] - DemandRegio (FfE / project partners) provides electricity demand by NUTS3 region and sector for Germany.
+- [[Energy-Charts]] - Fraunhofer ISE's Energy-Charts API supplies the measured hourly physical flows between Germany and each of its 11 neighbours, without an account.
 - [[ENTSO-E Transparency]] - The ENTSO-E Transparency Platform supplies NetzFix's hourly 2024 DE-LU load, actual generation per type and per unit (> 100 MW), cross-border physical flows and day-ahead prices.
 - [[ERA5 and atlite]] - Wind and PV hourly capacity factors per cluster bus for weather year 2024 are computed with atlite (MIT, v0.7.0) from ERA5 reanalysis, then weighted by MaStR installed capacity within each cluster.
 - [[JAO]] - JAO (Joint Allocation Office) publishes the Core static grid model (lines >= 220 kV with ratings) and flow-based market coupling results.

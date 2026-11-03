@@ -23,7 +23,7 @@ uv run netzfix serve      # http://127.0.0.1:8765
 Dev mode for the UI: `uv run netzfix serve` + `cd web && npm run dev` (port 5173, proxies `/api`).
 
 ## What is in it (all `stated`, from `results/playground_baseline_2024/diagnostics.json`, `scripts/diagnose_baseline.py`, commit 4c57ae5, and `data/processed/assets_baseline_2024_report.json`)
-- **Grid:** 780 buses, 1,019 lines, 153 transformers (1,172 branches), 45 border points ([[OSM PyPSA-Eur Grid]]).
+- **Grid:** 780 German buses, 1,019 lines, 153 transformers; since 2026-11-03 also 41 real cross-border lines and Kron-reduced equivalents of the AC neighbours (38 buses, 60 equivalent lines; 818 buses / 1,273 branches in total), driven by measured 2024 physical flows per country ([[Energy-Charts]], [[Assumptions]] A18 v1, A21b). The v0 numbers below are from before that change.
 - **Assets:** 6,911 (1,280 single producers ≥ 10 MW, 3,948 aggregated producer groups, 150 single + 896 aggregated storage, 637 demand nodes), built from 6,798,004 MaStR units operating in at least one month of 2024.
 - **Locations (by capacity):** own coordinates 163.9 GW, powerplantmatching 73.0 GW, municipality 47.1 GW, district centre 1.1 GW, unplaced 6.8 MW (17 small solar units). Median distance unit → substation 11.2 km.
 - **Fleet Jan → Dec 2024 (MW, MaStR):** solar 76,345 → 90,019; wind onshore 61,028 → 63,483; offshore 8,473 → 9,215; lignite 18,266 → 15,169; hard coal 18,226 → 15,382; gas 34,596 → 34,608; pumped hydro 9,960 → 9,900; batteries 8,367 → 12,015 ([[Marktstammdatenregister]]).

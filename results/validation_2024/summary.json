@@ -1,38 +1,53 @@
 {
- "commit_at_run": "379ace7",
+ "commit_at_run": "bed649b",
  "model": {
   "tso_circuit_km": 34200.52076,
   "peak_load_gw": 75.50825,
-  "net_import_twh": 40.900469030000004,
-  "line_hours_over_100pct_before": 13843,
-  "line_hours_over_70pct_before": 92467
+  "net_import_twh_smard_residual": 40.900469030000004,
+  "net_import_twh": 25.1397775,
+  "net_import_twh_by_country": {
+   "AT": -2.09,
+   "BE": 2.7,
+   "CH": 4.49,
+   "CZ": -3.87,
+   "DK": 7.4,
+   "FR": 19.77,
+   "LU": -2.81,
+   "NL": -0.05,
+   "NO": 5.78,
+   "PL": -8.81,
+   "SE": 2.62
+  },
+  "domestic_gap_twh": 15.76069153,
+  "line_hours_over_100pct_before": 17912,
+  "line_hours_over_70pct_before": 90611
  },
  "redispatch": {
   "limit_1.0": {
-   "seconds": 111.5,
+   "seconds": 258.0,
    "volume_twh": {
-    "up": 3.763,
-    "down_dispatchable": 1.217,
-    "down_curtail": 2.547,
-    "up_plus_down": 7.526
+    "up": 8.913,
+    "down_dispatchable": 2.902,
+    "down_curtail": 6.011,
+    "up_plus_down": 17.826
    },
-   "hours_with_redispatch": 4054,
-   "unresolved_mwh": 10852.4,
-   "hours_unresolved": 275,
-   "line_hours_over_limit_after": 275
+   "hours_with_redispatch": 5024,
+   "unresolved_mwh": 71668.0,
+   "hours_unresolved": 417,
+   "line_hours_over_limit_after": 887
   },
   "limit_0.7": {
-   "seconds": 519.4,
+   "seconds": 1478.5,
    "volume_twh": {
-    "up": 10.683,
-    "down_dispatchable": 3.124,
-    "down_curtail": 7.559,
-    "up_plus_down": 21.365
+    "up": 35.683,
+    "down_dispatchable": 14.189,
+    "down_curtail": 21.494,
+    "up_plus_down": 71.366
    },
-   "hours_with_redispatch": 7952,
-   "unresolved_mwh": 145651.1,
-   "hours_unresolved": 1545,
-   "line_hours_over_limit_after": 1847
+   "hours_with_redispatch": 8557,
+   "unresolved_mwh": 975140.3,
+   "hours_unresolved": 3750,
+   "line_hours_over_limit_after": 8208
   }
  },
  "reference": {

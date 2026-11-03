@@ -1,2 +1,74 @@
 INFO:pypsa.network.io:Imported network 'Unnamed Network' has buses, carriers, lines, transformers
-limit 1.0: {'seconds': 626.1, 'volume_twh': {'up': np.float64(93.196), 'down_dispatchable': np.float64(45.658), 'down_curtail': np.float64(47.538), 'up_plus_down': np.float64(186.391)}, 'hours_with_redispatch': 8482, 'unresolved_mwh': 2392562.6, 'hours_unresolved': 5987, 'line_hours_over_limit_after': 6708}
+limit 1.0: {'seconds': 258.0, 'volume_twh': {'up': np.float64(8.913), 'down_dispatchable': np.float64(2.902), 'down_curtail': np.float64(6.011), 'up_plus_down': np.float64(17.826)}, 'hours_with_redispatch': 5024, 'unresolved_mwh': 71668.0, 'hours_unresolved': 417, 'line_hours_over_limit_after': 887}
+limit 0.7: {'seconds': 1478.5, 'volume_twh': {'up': np.float64(35.683), 'down_dispatchable': np.float64(14.189), 'down_curtail': np.float64(21.494), 'up_plus_down': np.float64(71.366)}, 'hours_with_redispatch': 8557, 'unresolved_mwh': 975140.3, 'hours_unresolved': 3750, 'line_hours_over_limit_after': 8208}
+{
+ "commit_at_run": "bed649b",
+ "model": {
+  "tso_circuit_km": 34200.52076,
+  "peak_load_gw": 75.50825,
+  "net_import_twh_smard_residual": 40.900469030000004,
+  "net_import_twh": 25.1397775,
+  "net_import_twh_by_country": {
+   "AT": -2.09,
+   "BE": 2.7,
+   "CH": 4.49,
+   "CZ": -3.87,
+   "DK": 7.4,
+   "FR": 19.77,
+   "LU": -2.81,
+   "NL": -0.05,
+   "NO": 5.78,
+   "PL": -8.81,
+   "SE": 2.62
+  },
+  "domestic_gap_twh": 15.76069153,
+  "line_hours_over_100pct_before": 17912,
+  "line_hours_over_70pct_before": 90611
+ },
+ "redispatch": {
+  "limit_1.0": {
+   "seconds": 258.0,
+   "volume_twh": {
+    "up": 8.913,
+    "down_dispatchable": 2.902,
+    "down_curtail": 6.011,
+    "up_plus_down": 17.826
+   },
+   "hours_with_redispatch": 5024,
+   "unresolved_mwh": 71668.0,
+   "hours_unresolved": 417,
+   "line_hours_over_limit_after": 887
+  },
+  "limit_0.7": {
+   "seconds": 1478.5,
+   "volume_twh": {
+    "up": 35.683,
+    "down_dispatchable": 14.189,
+    "down_curtail": 21.494,
+    "up_plus_down": 71.366
+   },
+   "hours_with_redispatch": 8557,
+   "unresolved_mwh": 975140.3,
+   "hours_unresolved": 3750,
+   "line_hours_over_limit_after": 8208
+  }
+ },
+ "reference": {
+  "congestion_management_gwh": {
+   "value": 30320,
+   "source": "Monitoringbericht 2025, PDF p. 23"
+  },
+  "net_import_twh": {
+   "value": 27.300000000000004,
+   "source": "Monitoringbericht 2025, PDF p. 23 (imports 64.9 - exports 37.6)"
+  },
+  "tso_circuit_km": {
+   "value": 38400,
+   "source": "Monitoringbericht 2025, PDF p. 18"
+  },
+  "peak_load_gw": {
+   "value": 75.8,
+   "source": "Monitoringbericht 2025, PDF p. 18 (quarter-hour, 15 Jan 11:30-11:45)"
+  }
+ }
+}
