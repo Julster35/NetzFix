@@ -1,6 +1,22 @@
 {
  "target_gwh": 24565,
  "grid": {
+  "0.7": {
+   "up_plus_down_gwh": 71365.85029698833,
+   "unresolved_gwh": 975.1402964266846
+  },
+  "0.75": {
+   "up_plus_down_gwh": 58028.34720333962,
+   "unresolved_gwh": 672.1698720667212
+  },
+  "0.8": {
+   "up_plus_down_gwh": 47663.95683077711,
+   "unresolved_gwh": 449.6255810476965
+  },
+  "0.85": {
+   "up_plus_down_gwh": 39008.69830096445,
+   "unresolved_gwh": 289.57316860136126
+  },
   "0.9": {
    "up_plus_down_gwh": 30657.487531784063,
    "unresolved_gwh": 184.61562379812145

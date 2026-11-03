@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import pathlib
 
 import numpy as np
 
@@ -32,9 +33,9 @@ Q4_TOTAL, YEAR_TOTAL = 10_424, 30_304
 UP_TOP2 = {"gas", "hard_coal"}  # gas 4,151 and hard coal 3,792 GWh most increased
 
 
-def load() -> dict[float, dict]:
+def load(d=DIR) -> dict[float, dict]:
     runs = {}
-    for f in sorted(DIR.glob("alpha_*.json")):
+    for f in sorted(d.glob("alpha_*.json")):
         d = json.loads(f.read_text(encoding="utf-8"))
         runs[d["alpha"]] = d
     return runs
@@ -83,8 +84,10 @@ def tests(d: dict) -> dict:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--test", type=float, default=None, help="alpha of the run to test")
+    ap.add_argument("--dir", default=str(DIR), help="folder with alpha_*.json")
     a = ap.parse_args()
-    runs = load()
+    d = pathlib.Path(a.dir)
+    runs = load(d)
     report = {"target_gwh": TARGET,
               "grid": {str(k): {"up_plus_down_gwh": v["gwh"]["up_plus_down"],
                                 "unresolved_gwh": v["unresolved_gwh"]} for k, v in runs.items()},
@@ -92,7 +95,7 @@ def main() -> None:
     if a.test is not None:
         report["tested_alpha"] = a.test
         report["tests"] = tests(runs[a.test])
-    (DIR / "report.json").write_text(json.dumps(report, indent=1), encoding="utf-8")
+    (d / "report.json").write_text(json.dumps(report, indent=1), encoding="utf-8")
     print(json.dumps(report, indent=1))
 
 

@@ -53,7 +53,7 @@ Catalog of every note, grouped by folder. Read this before searching. PDFs: `lit
 - [[SMARD 2025 Netzengpassmanagement 2024]] - The Bundesnetzagentur's SMARD article on congestion management in 2024 (published 2025-04-02), held as a saved HTML page.
 - [[Xiong et al 2025]] - Describes and validates the OpenStreetMap-based European high-voltage grid (>= 200 kV) that PyPSA-Eur uses as `base_network: osm`; it is NetzFix's network layer.
 
-## Data sources (12)
+## Data sources (13)
 
 - [[BZR dataset]] - The ENTSO-E Bidding Zone Review data are publicly downloadable (checked 2026-11-03).
 - [[Data Sources]] - Master list of every NetzFix data source, the layer it feeds, its access status and its note.
@@ -64,6 +64,7 @@ Catalog of every note, grouped by folder. Read this before searching. PDFs: `lit
 - [[JAO]] - JAO (Joint Allocation Office) publishes the Core static grid model (lines >= 220 kV with ratings) and flow-based market coupling results.
 - [[Marktstammdatenregister]] - The Marktstammdatenregister (MaStR) is the BNetzA's official register of all German generation and storage units with location, capacity and commissioning date.
 - [[netztransparenz Redispatch]] - netztransparenz.de is the joint information platform of the four German TSOs; it publishes individual redispatch measures (time, TSO, affected units or areas, direction, volume).
+- [[Offshore Connections]] - Where German offshore wind farms come ashore, reconstructed from data rather than from a hand-made list (Julien's question 2026-11-03: "could we reverse engineer the offshore stuff from the data?").
 - [[OSM PyPSA-Eur Grid]] - The transmission network (220-750 kV AC lines, HVDC, substations) comes from PyPSA-Eur's OpenStreetMap-based base network ([[Xiong et al 2025]]), built and clustered by PyPSA-Eur v2026.09.0 for DE + neighbours.
 - [[Raw Data Inventory]] - What has been downloaded into `data/raw/` (git-ignored), by which code, and its state.
 - [[SMARD]] - SMARD (smard.de) is the Bundesnetzagentur's electricity market data portal: day-ahead prices, generation, consumption and congestion-management (redispatch) data for Germany.

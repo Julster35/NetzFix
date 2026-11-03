@@ -99,3 +99,18 @@ Julien (2026-11-03): "can you go ahead with the calibration and then test?" Mode
 - **This is a second attempt after seeing a failed test.** Both v1 and v2 results are reported; v2 is not a confirmation of anything that v1 already passed.
 - **Unchanged:** target 24,565 GWh, grid alpha 0.70-1.00, interpolation rule, tests T1-T5 with the same pass rules. Server job array as before; alpha\* run afterwards.
 - Known residual issues stated in advance: DWKA (266 MW) is a geographic tie between DolWin2 and DolWin6 (assigned DolWin2); BorWin5's onshore end is 16 km from the nearest bus; export-cable capacity limits are not modelled (only the landing point).
+
+### 2026-11-03 - Calibration v2: RESULTS (second attempt, after offshore reconstruction)
+- Runs on the laptop (chair server unreachable: SSH timeout, VPN presumably down), code at `68cfb1b` + report `--dir` option; files `results/calibration_v2/`.
+- Grid (GWh): 0.70 → 68,012; 0.75 → 54,996; 0.80 → 45,123; 0.85 → 36,968; 0.90 → 29,120; 0.95 → 22,257; 1.00 → 17,106. **alpha\* = 0.933**; run at 0.933: 24,478 GWh vs 24,565.
+
+| Test | v1 (alpha 0.942) | v2 (alpha 0.933) | Real |
+|---|---|---|---|
+| T1 curtailment | 8,195 pass | 7,864 pass | 9,374 |
+| T2 offshore / onshore / solar | 15.6 / 68.2 / 16.2% fail | **6.8 / 75.0 / 18.2% fail** | 48.9 / 36.3 / 14.9% |
+| T3 Q4 share | 57.5% fail | 58.8% fail | 34.4% |
+| T4 top-2 upward | gas, hard coal pass | gas 5,423, hard coal 3,500 pass | gas 4,151, hard coal 3,792 |
+| T5 renewables share of down | 67.2% pass | 64.3% pass | 64.9% |
+
+- **Reading:** hypothesis (a) for T2 (wrong landing points) is **rejected**: with data-based landings offshore curtailment falls further. Remaining explanation `medium`: the redispatch *rule*. Minimum-volume redispatch picks the most effective units per MW; real operators follow the cost-based order and minimum factors and curtail offshore wind heavily. This is the friction/rule question O1 of the market-design part, not a grid error. Export-cable limits and regional weather remain untested.
+- **Decision (Claude, reversible):** keep v2 (data-based landings) as the model; redispatch default margin 0.933.
