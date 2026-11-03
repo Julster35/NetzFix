@@ -1,0 +1,33 @@
+# NetzFix default configuration.
+# Every value here is an ASSUMPTION or a run setting; each is documented in vault/project/Assumptions.md
+# (key -> assumption ID). Change values via a scenario file in config/scenarios/, never by editing results.
+
+run:
+  name: default
+  base_year: 2024          # A1 - demand, capacities, prices of this year
+  weather_year: 2024       # A2 - ERA5 weather year for atlite profiles
+
+geography:
+  focus_country: DE
+  # Neighbours are aggregated (one bus per country). LU is part of the DE-LU bidding zone (A3).
+  neighbours: [AT, BE, CH, CZ, DK, FR, LU, NL, NO, PL, SE]
+
+network:
+  source: pypsa-eur-osm    # A4 - PyPSA-Eur base_network: osm (pinned release below)
+  pypsa_eur_release: v2026.09.0
+  n_clusters_de: 30        # A5 - Milestone 1 smoke size; research runs 50 -> 200+
+  s_max_pu: 0.7            # A6 - n-1 security proxy (sensitivities 0.6 / 0.8)
+  power_flow: linear_dc    # A7
+
+time:
+  resolution: 3h           # A8 - first runs; full hourly year later
+  sample: one_week         # one_week | representative_weeks | full_year
+
+markets:
+  designs: [A_uniform, B_zonal, C_nodal]
+  zone_maps: [DE2_NS, DE5_BZR2025]   # A9 - mapping documented in vault/concepts/Zonal Pricing and Bidding Zones.md
+  redispatch_compensation: cost_based  # A10
+
+solver:
+  name: highs              # gurobi via override (academic licence)
+  options: {}

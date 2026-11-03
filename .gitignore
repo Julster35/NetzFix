@@ -1,0 +1,26 @@
+# Data (raw downloads are cached locally and listed in data/MANIFEST.csv, never committed)
+data/raw/
+data/processed/*
+!data/processed/.gitkeep
+!data/processed/*.small.csv
+cutouts/
+*.nc
+results/networks/*.nc
+
+# Web
+web/node_modules/
+web/dist/
+
+# Python / env
+.env
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# PyPSA-Eur checkout and its outputs (pinned, cloned by scripts/, not vendored)
+workflow/pypsa-eur/
+
+# Obsidian
+vault/.obsidian/workspace*.json
