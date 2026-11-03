@@ -3,7 +3,7 @@ type: data-source
 date: 2026-11-03
 tags: [data, demand, regionalisation, nuts3]
 ai-first: true
-status: "not accessed yet (2026-11-03)"
+status: "not accessed; v0 uses GISCO LAU municipal population instead (2026-11-03)"
 ---
 
 # DemandRegio

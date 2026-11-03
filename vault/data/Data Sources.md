@@ -13,14 +13,14 @@ Master list of every NetzFix data source, the layer it feeds, its access status 
 
 | Layer | Source | Note | Access | Status (2026-11-03) |
 |---|---|---|---|---|
-| 1 Grid | PyPSA-Eur OSM network | [[OSM PyPSA-Eur Grid]] | open (ODbL) | not downloaded |
-| 2 Units | Marktstammdatenregister | [[Marktstammdatenregister]] | open | not downloaded |
+| 1 Grid | PyPSA-Eur OSM network v0.7 | [[OSM PyPSA-Eur Grid]] | open (ODbL) | ✅ 2026-11-03 |
+| 2 Units | Marktstammdatenregister (+ powerplantmatching coordinates) | [[Marktstammdatenregister]] | open | ✅ 2026-11-03 |
 | 3 Wind/PV | ERA5 via atlite | [[ERA5 and atlite]] | **CDS login (U1)** | blocked on login |
 | 4 Conventional calibration | ENTSO-E generation per unit | [[ENTSO-E Transparency]] | **API token (U2)** | blocked on token |
 | 4 Fuel/CO2 prices 2024 | to choose (A14) | - | - | not chosen |
-| 5 Demand | ENTSO-E load + NUTS3 shares | [[ENTSO-E Transparency]], [[DemandRegio]] | token; DemandRegio to check (U4) | not downloaded |
+| 5 Demand | v0: SMARD load × LAU population shares; later ENTSO-E + DemandRegio | [[SMARD]], [[DemandRegio]] | open (v0) | ✅ v0 2026-11-03 |
 | 6 Cross-border | ENTSO-E flows | [[ENTSO-E Transparency]] | token | not downloaded |
-| 7 Validation | SMARD, ENTSO-E prices, netztransparenz, BNetzA | [[SMARD]], [[netztransparenz Redispatch]] | open | not downloaded |
+| 7 Validation / behaviour | SMARD 2024 hourly (load, generation per technology, price) | [[SMARD]], [[netztransparenz Redispatch]] | open | ✅ SMARD 2024 |
 | X Cross-validation | ENTSO-E BZR data | [[BZR dataset]] | open | public, not downloaded |
 | X Line ratings / FB | JAO | [[JAO]] | open | optional |
 

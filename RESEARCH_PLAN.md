@@ -4,7 +4,7 @@ Open-data model of the German transmission grid: is total system cost lower unde
 
 Full detail lives in the vault: [Research Design](vault/project/Research%20Design.md) · [Hypotheses](vault/project/Hypotheses.md) · [Assumptions](vault/project/Assumptions.md) · [Validation](vault/project/Validation.md) · [Prior Art](vault/project/Prior%20Art.md) · [Open Questions](vault/project/Open%20Questions.md) · [Decision Log](vault/project/Decision%20Log.md).
 
-Status 2026-11-03: Milestone 0 done, waiting for Julien's review.
+Status 2026-11-03: Milestone 0 done; Milestone 1 (Playground v0) running locally, see vault/project/Playground.md.
 
 ## Method in five lines
 1. Network: PyPSA-Eur **v2026.09.0** OSM grid, DE+LU detailed, neighbours one bus each, clustered (30 → 50 → 200+ buses).

@@ -13,14 +13,15 @@ Catalog of every note, grouped by folder. Read this before searching. PDFs: `lit
 
 - [[00_Home]] - Dashboard: Would Germany's power system be cheaper to run with bidding zones or nodal prices than with one price zone plus redispatch, and would locational prices make generation or storage in the south pay off?
 
-## Project (10)
+## Project (11)
 
 - [[Analysis Log]] - Every specification that is run gets one entry here, **before** its result is looked at, and whatever the result (including failures and smoke tests).
 - [[Assumptions]] - Every modelling assumption, with an ID that `config/default.yaml` refers to, its default, its source and why.
 - [[Decision Log]] - This is the record of design decisions for NetzFix, newest first, each with who decided, the reason and its consequences.
 - [[Hypotheses]] - These are the three testable predictions from Julien's brief with a **proposed** metric and decision rule.
-- [[Next Steps]] - Ordered actions as of 2026-11-03, end of Milestone 0.
+- [[Next Steps]] - Ordered actions as of 2026-11-03 evening.
 - [[Open Questions]] - Decisions Julien must take and unknowns to resolve, as of 2026-11-03, ordered by how much they change the answer.
+- [[Playground]] - The playground is Julien's chosen first step (2026-11-03, [[Decision Log]] "Re-scope"): the German transmission grid of 2024 "as is", with every producer and consumer attached to a substation, where assets can be adde...
 - [[Prior Art]] - This note records which existing open code and data NetzFix reuses and why, verified live on 2026-11-03 (GitHub API, project docs, ENTSO-E site, arXiv).
 - [[Research Design]] - This is the full plan for answering the [[Research Question]], written on 2026-11-03 before any model code or data download.
 - [[Research Question]] - NetzFix asks whether Germany's power system would be cheaper to run under bidding zones or nodal prices than under today's single price zone plus redispatch, and whether locational prices would make generation or stor...
@@ -61,7 +62,7 @@ Catalog of every note, grouped by folder. Read this before searching. PDFs: `lit
 - [[Marktstammdatenregister]] - The Marktstammdatenregister (MaStR) is the BNetzA's official register of all German generation and storage units with location, capacity and commissioning date.
 - [[netztransparenz Redispatch]] - netztransparenz.de is the joint information platform of the four German TSOs; it publishes individual redispatch measures (time, TSO, affected units or areas, direction, volume).
 - [[OSM PyPSA-Eur Grid]] - The transmission network (220-750 kV AC lines, HVDC, substations) comes from PyPSA-Eur's OpenStreetMap-based base network ([[Xiong et al 2025]]), built and clustered by PyPSA-Eur v2026.09.0 for DE + neighbours.
-- [[Raw Data Inventory]] - This lists what has been downloaded into `data/raw/` (git-ignored), by which script, with which MANIFEST rows, and its state.
+- [[Raw Data Inventory]] - What has been downloaded into `data/raw/` (git-ignored), by which code, and its state.
 - [[SMARD]] - SMARD (smard.de) is the Bundesnetzagentur's electricity market data portal: day-ahead prices, generation, consumption and congestion-management (redispatch) data for Germany.
 
 ## Figures (1)

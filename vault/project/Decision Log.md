@@ -12,6 +12,13 @@ This is the record of design decisions for NetzFix, newest first, each with who 
 
 ---
 
+## 2026-11-03 - Own MaStR parser; powerplantmatching for plant locations (Claude)
+**Decision:** parse the MaStR bulk export with our own streaming parser (`src/netzfix/data/mastr.py`) instead of open-mastr; take coordinates of large plants from powerplantmatching v0.9.1 (CC-BY-4.0), matched by MaStR unit number. Supersedes "open-mastr only in a standalone script" in the Part 0 entry below.
+**Why:** open-mastr 1.0.0 failed on all solar files and on the combustion file of the 2026-11-03 export (list-valued catalogue fields; log in `data/raw/mastr/logs/open_mastr.log`), which would have silently dropped ~6.6 M solar units and all coal/gas units. The public export has no coordinates for most large plants; district-centre placement stacked e.g. Knapsack I/II and Basell Wesseling onto one 220 kV node.
+**Consequences:** no AGPL dependency. 73.0 GW placed via powerplantmatching, 1.1 GW still at district centres ([[Playground]]). Next refinement: connection voltage from the BNetzA Kraftwerksliste.
+
+---
+
 ## 2026-11-03 - Re-scope: playground first, optimisation second (Julien)
 **Decision (Julien, 2026-11-03, after reviewing Milestone 0):** "for now it would be nice to rebuild the current system as is ... nodes for all the producers and consumers ... built in a way that we could add producers and consumers and play around with their behaviour. Build out a simulation based on known distributions ... the optimisation can be the second step, for now we want to build out the playground which i also want to be able to nicely visualize."
 - **Architecture (Julien's choice):** one Python simulation engine + a local web UI served by it (`uv run netzfix serve`); scenarios are edits on top of the 2024 baseline, saved as JSON. Static export for sharing later.
