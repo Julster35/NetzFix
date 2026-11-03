@@ -19,7 +19,7 @@ Catalog of every note, grouped by folder. Read this before searching. PDFs: `lit
 - [[Assumptions]] - Every modelling assumption, with an ID that `config/default.yaml` refers to, its default, its source and why.
 - [[Decision Log]] - This is the record of design decisions for NetzFix, newest first, each with who decided, the reason and its consequences.
 - [[Hypotheses]] - These are the three testable predictions from Julien's brief with a **proposed** metric and decision rule.
-- [[Next Steps]] - Ordered actions as of 2026-11-03 evening.
+- [[Next Steps]] - Ordered actions as of 2026-11-03, end of session.
 - [[Open Questions]] - Decisions Julien must take and unknowns to resolve, as of 2026-11-03, ordered by how much they change the answer.
 - [[Playground]] - The playground is Julien's chosen first step (2026-11-03, [[Decision Log]] "Re-scope"): the German transmission grid of 2024 "as is", with every producer and consumer attached to a substation, where assets can be adde...
 - [[Prior Art]] - This note records which existing open code and data NetzFix reuses and why, verified live on 2026-11-03 (GitHub API, project docs, ENTSO-E site, arXiv).

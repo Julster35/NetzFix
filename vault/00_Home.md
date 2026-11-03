@@ -11,7 +11,7 @@ ai-first: true
 
 An open-data model of the German transmission grid (PyPSA-Eur OSM network, MaStR fleet, atlite weather, ENTSO-E load, base year 2024) runs three market designs on the same system: **A** uniform + redispatch, **B** 2-5 zones + redispatch, **C** nodal. The answer is pre-registered ([[Hypotheses]]) and sealed with OpenTimestamps before any comparison. An interactive web twin shows the results.
 
-**Status (2026-11-03, evening):** Julien re-scoped to a **playground first** ([[Decision Log]]). **[[Playground]] v0 runs** (`uv run netzfix serve`): the 2024 grid as is (780 substations, 1,172 branches), 6.8 M MaStR units as 6,911 assets with a monthly 2024 fleet, SMARD 2024 behaviours, municipal-population demand, stochastic modifiers, DC flows, and a local map UI. The replay reproduces SMARD 2024 energy per technology. Not yet validated against real congestion; A/B/C optimisation comes later, hypotheses unfrozen.
+**Status (2026-11-03, end of session):** [[Playground]] runs (`uv run netzfix serve`): 2024 grid as is, 6.8 M MaStR units as 6,911 assets, neighbours as Kron-reduced equivalents driven by measured 2024 border flows ([[Energy-Charts]]), offshore landings reconstructed from data ([[Offshore Connections]]), and a minimum-volume redispatch operator. Line margin calibrated to 0.933 on 2024 redispatch volume ([[Validation]] v2): tests T1, T4, T5 pass; T2 (curtailment mix) and T3 (Q4 share) fail. Next: redispatch priority rule or regional weather ([[Next Steps]]). A/B/C later, hypotheses unfrozen.
 
 ---
 
