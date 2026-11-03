@@ -20,11 +20,12 @@ from shapely import wkt as shp_wkt
 from netzfix.config import DATA_PROCESSED, REPO_ROOT
 from netzfix.network import grid as gridmod
 from netzfix.sim.behaviours import Context, schema
-from netzfix.sim.engine import simulate
+from netzfix.sim.engine import historical_import, simulate
 
 SCENARIOS = REPO_ROOT / "scenarios"
 ASSETS_FILE = DATA_PROCESSED / "assets_baseline_2024.parquet"
 SMARD_FILE = DATA_PROCESSED / "smard_DE_2024.parquet"
+CBPF_FILE = DATA_PROCESSED / "cbpf_DE_2024.parquet"
 
 
 def _b64(a: np.ndarray, dtype: str) -> str:
@@ -60,6 +61,12 @@ class Playground:
         self.s_nom = np.array([(s_line if b.startswith("Line:") else s_tr)[b.split(":", 1)[1]]
                                for b in self.branches], dtype=float)
         self.ts = pd.read_parquet(SMARD_FILE)
+        if CBPF_FILE.exists():  # measured cross-border physical flows (A18 v1)
+            xb = pd.read_parquet(CBPF_FILE).add_prefix("xb_")
+            self.ts = self.ts.join(xb, how="left")
+            if self.ts[xb.columns].isna().any().any():
+                raise ValueError("cross-border flows do not cover all SMARD hours")
+            self.ts["domestic_gap"] = historical_import(self.ts) - self.ts[xb.columns].sum(axis=1)
         base = pd.read_parquet(ASSETS_FILE)
         base["behaviour"] = base["behaviour"].map(json.loads)
         base["p_nom_monthly"] = base["p_nom_monthly"].map(
@@ -74,6 +81,11 @@ class Playground:
                 self.capacity[c] = self.capacity.get(c, np.zeros(12)) + np.asarray(
                     a["p_nom_monthly"], float)
         self.scenario = Scenario()
+        # shares for the domestic gap: same as demand shares (A21b)
+        share = {a["bus"]: a["behaviour"]["share"] for a in self.baseline.values()
+                 if a["kind"] == "consumer" and a["behaviour"]["type"] == "demand_share"}
+        self.gap_share = np.array([share.get(b, 0.0) for b in self.buses])
+        self.gap_share = self.gap_share / self.gap_share.sum()
 
     # ------------------------------------------------------------------ assets
     def assets(self) -> list[dict]:
@@ -160,7 +172,8 @@ class Playground:
                              "s_nom": round(float(self.s_nom[k]), 1),
                              "path": [[round(x, 5), round(y, 5)] for x, y in coords]})
         buses = [{"i": i, "id": b, "lon": round(float(n.buses.at[b, "x"]), 5),
-                  "lat": round(float(n.buses.at[b, "y"]), 5), "v": float(n.buses.at[b, "v_nom"])}
+                  "lat": round(float(n.buses.at[b, "y"]), 5), "v": float(n.buses.at[b, "v_nom"]),
+                  "virtual": b.startswith("NB-")}
                  for i, b in enumerate(self.buses)]
         borders = self.grid.borders.to_dict("records")
         return {"buses": buses, "branches": branches, "borders": borders,
@@ -176,6 +189,10 @@ class Playground:
         return [{k: a.get(k) for k in keep} for a in self.assets()]
 
     # ------------------------------------------------------------------ simulation
+    def simulate(self, ctx: Context, balancing: str = "keep_trade"):
+        return simulate(self.assets(), self.buses, self.ptdf, self.branches, self.s_nom,
+                        self.grid.borders, ctx, balancing=balancing, gap_share=self.gap_share)
+
     def run(self, start: str, hours: int, balancing: str | None = None,
             seed: int | None = None, redispatch_limit: float | None = None) -> dict:
         t0 = pd.Timestamp(start)
@@ -187,8 +204,7 @@ class Playground:
         bal = balancing or st.get("balancing", "keep_trade")
         sd = int(seed if seed is not None else st.get("seed", 0))
         ctx = Context(ts=win, capacity=self.capacity, seed=sd)
-        r = simulate(self.assets(), self.buses, self.ptdf, self.branches, self.s_nom,
-                     self.grid.borders, ctx, balancing=bal)
+        r = self.simulate(ctx, balancing=bal)
         T = len(win)
         flow_before = r.flow
         rd_payload: dict = {"enabled": False}
@@ -222,6 +238,9 @@ class Playground:
             "by_carrier": {c: np.round(v.to_numpy(), 1).tolist()
                            for c, v in r.by_carrier.items()},
             "border_total": np.round(r.border.sum(axis=1).to_numpy(), 1).tolist(),
+            "border_by_country": ({c: np.round(r.border[c].to_numpy(), 1).tolist()
+                                   for c in r.border.columns}
+                                  if all(len(str(c)) == 2 for c in r.border.columns) else {}),
             "trade_deviation": np.round(r.trade_deviation, 1).tolist(),
             "price": np.round(win["price_de_lu"].to_numpy(), 2).tolist(),
             "kpi": {

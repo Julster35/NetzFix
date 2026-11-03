@@ -27,7 +27,7 @@ import pandas as pd
 from netzfix.config import RESULTS
 from netzfix.server.state import Playground
 from netzfix.sim.behaviours import Context
-from netzfix.sim.engine import historical_import, simulate
+from netzfix.sim.engine import historical_import
 from netzfix.sim.redispatch import redispatch
 
 REF = {
@@ -45,12 +45,17 @@ def main() -> None:
     pg = Playground()
     n = pg.grid.network
     ctx = Context(ts=pg.ts, capacity=pg.capacity)
-    r = simulate(pg.assets(), pg.buses, pg.ptdf, pg.branches, pg.s_nom, pg.grid.borders, ctx)
+    r = pg.simulate(ctx)
     lines = n.lines
     model = {
         "tso_circuit_km": float((lines.length * lines.num_parallel).sum()),
         "peak_load_gw": float(pg.ts.load.max() / 1e3),
-        "net_import_twh": float(historical_import(pg.ts).sum() / 1e6),
+        "net_import_twh_smard_residual": float(historical_import(pg.ts).sum() / 1e6),
+        "net_import_twh": float(r.border.sum(axis=1).sum() / 1e6),
+        "net_import_twh_by_country": {str(c): round(float(r.border[c].sum()) / 1e6, 2)
+                                      for c in r.border.columns},
+        "domestic_gap_twh": float(pg.ts["domestic_gap"].sum() / 1e6)
+        if "domestic_gap" in pg.ts else None,
         "line_hours_over_100pct_before": int((r.loading > 1).sum()),
         "line_hours_over_70pct_before": int((r.loading > 0.7).sum()),
     }

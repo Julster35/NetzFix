@@ -4,8 +4,13 @@ What is built (see vault/project/Assumptions.md, A4 and A17-A19):
 - Buses: German substations (country == DE) in the largest AC-connected component.
 - Lines: AC lines with both ends in that component (s_nom, r, x, b from the OSM dataset).
 - Transformers: OSM s_nom; x = 0.1 p.u. (PyPSA-Eur default `transformers.x`, config at v2026.09.0).
-- Border points: the German end of each cross-border AC line and each HVDC interconnector (via its
-  AC/DC converter). Imports/exports are injected here; neighbouring grids are not modelled (A18).
+- Neighbours (A18 v1): each neighbouring country is ONE virtual bus `NB-<CC>` (at the mean position
+  of the foreign line ends), connected through the real cross-border AC lines (their own r, x,
+  s_nom). The country's measured physical exchange is injected at that bus, so the split over its
+  parallel border lines follows the impedances. Neighbour-internal grids and loop flows *between*
+  neighbours are not modelled (the measured border flows already contain loop flows).
+- HVDC interconnectors are controllable: their share is injected at the German converter bus.
+- `borders` lists every border element with `inject_bus` (NB-<CC> for AC, converter bus for HVDC).
 """
 
 from __future__ import annotations
@@ -67,14 +72,31 @@ def build() -> Grid:
     n.add("Transformer", tr_in.index, bus0=tr_in.bus0, bus1=tr_in.bus1, s_nom=tr_in.s_nom,
           x=TRANSFORMER_X_PU, r=0.0, model="t")
 
-    # Border points: cross-border AC lines (German end) ...
+    # Border points: cross-border AC lines, kept as real lines to one virtual bus per country ...
     rows = []
     cross = ln[ln.bus0.isin(main) != ln.bus1.isin(main)]
-    cross = cross[cross.bus0.isin(main) | cross.bus1.isin(main)]
-    for lid, r in cross.set_index("line_id").iterrows():
+    cross = cross[(cross.bus0.isin(main) | cross.bus1.isin(main))].set_index("line_id")
+    bxy = b.set_index("bus_id")[["x", "y"]]
+    ends: dict[str, list[str]] = {}
+    for lid, r in cross.iterrows():
         de_bus, other = (r.bus0, r.bus1) if r.bus0 in main else (r.bus1, r.bus0)
-        rows.append({"border_id": lid, "bus": de_bus, "country": country.get(other, "?"),
-                     "capacity_mw": float(r.s_nom), "kind": "AC line"})
+        cc = country.get(other, "?")
+        ends.setdefault(cc, []).append(other)
+        rows.append({"border_id": lid, "bus": de_bus, "country": cc,
+                     "capacity_mw": float(r.s_nom), "kind": "AC line",
+                     "inject_bus": f"NB-{cc}"})
+    for cc, others in ends.items():
+        xy = bxy.loc[others].mean()
+        n.add("Bus", f"NB-{cc}", v_nom=380.0, x=float(xy.x), y=float(xy.y), carrier="AC",
+              country=cc)
+    ac_x = cross.copy()
+    ac_x["fb0"] = [f"NB-{country.get(r.bus0)}" if r.bus0 not in main else r.bus0
+                   for r in ac_x.itertuples()]
+    ac_x["fb1"] = [f"NB-{country.get(r.bus1)}" if r.bus1 not in main else r.bus1
+                   for r in ac_x.itertuples()]
+    n.add("Line", ac_x.index, bus0=ac_x.fb0, bus1=ac_x.fb1, s_nom=ac_x.s_nom, r=ac_x.r,
+          x=ac_x.x, b=ac_x.b, length=ac_x.length / 1e3, carrier="AC",
+          num_parallel=ac_x.circuits.astype(float))
     # ... and HVDC interconnectors: DE DC bus -> converter -> DE AC bus in the main component
     flipped = cv[["bus1", "bus0"]].set_axis(["bus0", "bus1"], axis=1)
     conv = pd.concat([cv[["bus0", "bus1"]], flipped])
@@ -84,10 +106,11 @@ def build() -> Grid:
             if de_dc in de and other not in de and de_dc in dc_to_ac:
                 rows.append({"border_id": lid, "bus": dc_to_ac[de_dc],
                              "country": country.get(other, "?"),
-                             "capacity_mw": float(r.p_nom), "kind": "HVDC link"})
+                             "capacity_mw": float(r.p_nom), "kind": "HVDC link",
+                             "inject_bus": dc_to_ac[de_dc]})
     borders = pd.DataFrame(rows)
 
-    geom = pd.concat([ln_in["geometry"], tr_in["geometry"]])
+    geom = pd.concat([ln_in["geometry"], tr_in["geometry"], cross["geometry"]])
     return Grid(n, borders, geom, dropped)
 
 

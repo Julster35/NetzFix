@@ -15,7 +15,6 @@ import numpy as np
 from netzfix.config import RESULTS
 from netzfix.server.state import Playground
 from netzfix.sim.behaviours import Context
-from netzfix.sim.engine import simulate
 
 CARRIERS = ["solar", "wind_onshore", "wind_offshore", "biomass", "hydro", "lignite", "hard_coal",
             "gas", "other_conventional", "other_renewable"]
@@ -26,7 +25,7 @@ def main() -> None:
     n = pg.grid.network
     ts = pg.ts
     ctx = Context(ts=ts, capacity=pg.capacity)
-    r = simulate(pg.assets(), pg.buses, pg.ptdf, pg.branches, pg.s_nom, pg.grid.borders, ctx)
+    r = pg.simulate(ctx)
     L = r.loading
     mx = L.max(axis=0)
     top = []

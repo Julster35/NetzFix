@@ -11,7 +11,16 @@ Balancing modes:
   pro rata to their output (down) or headroom (up); what they cannot absorb goes to the border and
   is reported as `trade_deviation`.
 - "border": the border absorbs every imbalance; dispatchables follow their behaviour.
-Border injections are split over border points in proportion to their capacity (A18, v0).
+Border (A18):
+- v1 (if `ts` has columns `xb_<CC>` = measured physical import from country CC, MW, and `borders`
+  has `inject_bus`): the 2024 trade target is the measured physical exchange; each country's
+  flow is injected at its virtual neighbour bus (AC lines) and its HVDC converter buses, split by
+  capacity between those injection points; any deviation caused by edits is spread over countries
+  by border capacity.
+- v0 fallback: SMARD residual (load + pumped load - generation), split over border points by
+  capacity.
+Domestic gap: if `ts` has `domestic_gap` (SMARD residual minus measured import, MW) and
+`gap_share` is given, it is injected per bus with those shares ("unmetered" generation, + = supply).
 """
 
 from __future__ import annotations
@@ -37,7 +46,7 @@ class Result:
     loading: np.ndarray         # T x branches, |flow| / s_nom
     injection: np.ndarray       # T x buses, MW (incl. border)
     by_carrier: pd.DataFrame    # T x carrier, MW (producers/storage +, "load" = demand)
-    border: pd.DataFrame        # T x border_id, MW (+ = import into DE)
+    border: pd.DataFrame        # T x country (v1) or border_id (v0), MW (+ = import into DE)
     trade_deviation: np.ndarray  # T, MW import beyond the 2024 net import (keep_trade) or total
     res_bus: np.ndarray         # T x buses, MW non-dispatchable generation (curtailable)
     disp_bus: np.ndarray        # T x buses, MW dispatchable generation (can go down)
@@ -62,6 +71,7 @@ def simulate(
     borders: pd.DataFrame,
     ctx: Context,
     balancing: str = "keep_trade",
+    gap_share: np.ndarray | None = None,
 ) -> Result:
     if balancing not in ("keep_trade", "border"):
         raise ValueError(balancing)
@@ -119,10 +129,22 @@ def simulate(
                 res_bus[:, i] += x
             add_carrier(c, x)
 
+    # 2b) domestic gap between SMARD balance and measured border flows ("unmetered")
+    if gap_share is not None and "domestic_gap" in ctx.ts:
+        gap = ctx.ts["domestic_gap"].to_numpy(dtype="float64")
+        inj += np.outer(gap, gap_share)
+        add_carrier("unmetered_gap", gap)
+
     # 3) balancing
+    xb_cols = [c for c in ctx.ts.columns if c.startswith("xb_")]
+    measured = bool(xb_cols) and "inject_bus" in borders
     disp = np.array(disp_rows).reshape(len(disp_rows), T)
     pmax = np.array(disp_pmax).reshape(len(disp_rows), T)
-    target = historical_import(ctx.ts) if balancing == "keep_trade" else np.zeros(T)
+    if balancing == "keep_trade":
+        target = (ctx.ts[xb_cols].sum(axis=1).to_numpy() if measured
+                  else historical_import(ctx.ts))
+    else:
+        target = np.zeros(T)
     if balancing == "keep_trade" and len(disp_rows):
         surplus = inj.sum(axis=1) + disp.sum(axis=0)          # + = export before balancing
         need = -target - surplus                               # + = more generation needed
@@ -142,17 +164,32 @@ def simulate(
         add_carrier(c, disp[k])
 
     border_total = -inj.sum(axis=1)                            # + = import
-    w = borders.capacity_mw.to_numpy() / borders.capacity_mw.sum()
-    border = np.outer(border_total, w)
-    for k, bus in enumerate(borders.bus):
-        inj[:, bidx[bus]] += border[:, k]
+    if measured:
+        cap_c = borders.groupby("country").capacity_mw.sum()
+        countries = [c for c in cap_c.index if f"xb_{c}" in ctx.ts]
+        cap_c = cap_c[countries]
+        base = np.column_stack([ctx.ts[f"xb_{c}"].to_numpy(dtype="float64") for c in countries])
+        dev = border_total - base.sum(axis=1)                  # edits / balancing remainder
+        flows_c = base + np.outer(dev, (cap_c / cap_c.sum()).to_numpy())
+        for j, c in enumerate(countries):
+            rows = borders[borders.country == c]
+            w_inj = rows.groupby("inject_bus").capacity_mw.sum()
+            for ib, cap in w_inj.items():
+                inj[:, bidx[ib]] += flows_c[:, j] * cap / w_inj.sum()
+        border = pd.DataFrame(flows_c, index=ctx.ts.index, columns=countries)
+    else:
+        w = borders.capacity_mw.to_numpy() / borders.capacity_mw.sum()
+        b_arr = np.outer(border_total, w)
+        for k, bus in enumerate(borders.bus):
+            inj[:, bidx[bus]] += b_arr[:, k]
+        border = pd.DataFrame(b_arr, index=ctx.ts.index, columns=borders.border_id)
 
     flow = inj @ ptdf.T
     return Result(
         snapshots=ctx.ts.index, buses=list(buses), branches=branches, flow=flow,
         loading=np.abs(flow) / s_nom, injection=inj,
         by_carrier=pd.DataFrame(carriers, index=ctx.ts.index),
-        border=pd.DataFrame(border, index=ctx.ts.index, columns=borders.border_id),
+        border=border,
         trade_deviation=border_total - target,
         res_bus=res_bus, disp_bus=disp_bus, headroom_bus=headroom_bus,
     )

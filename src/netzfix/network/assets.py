@@ -113,7 +113,7 @@ def behaviour(carrier: str) -> str:
 
 def build() -> Path:
     g = grid.load()
-    buses = g.network.buses
+    buses = g.network.buses[g.network.buses.country == "DE"]  # not the NB-* neighbours
     u = pd.read_parquet(MASTR_FILE)
     report: dict = {"mastr_rows": len(u)}
     active = np.column_stack([operating(u, m).to_numpy() for m in MONTH_ENDS])  # units x 12
