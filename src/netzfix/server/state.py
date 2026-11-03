@@ -134,6 +134,8 @@ class Playground:
             raise ValueError("kind must be producer, consumer or storage")
         if a["bus"] not in set(self.buses):
             raise ValueError(f"unknown bus {a['bus']}")
+        if a["bus"].startswith("NB-"):
+            raise ValueError("neighbour nodes are boundary equivalents; place assets in Germany")
         if "behaviour" not in a or "type" not in a["behaviour"]:
             raise ValueError("behaviour.type required")
 

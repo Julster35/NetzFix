@@ -2,13 +2,13 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import "./style.css";
 import maplibregl from "maplibre-gl";
 import { MapboxOverlay } from "@deck.gl/mapbox";
-import { PathLayer, ScatterplotLayer } from "@deck.gl/layers";
+import { PathLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers";
 import { TripsLayer } from "@deck.gl/geo-layers";
 
 // ------------------------------------------------------------------ types
 type Branch = { i: number; id: string; kind: string; v: number; s_nom: number; path: [number, number][] };
-type Bus = { i: number; id: string; lon: number; lat: number; v: number };
-type Border = { border_id: string; bus: string; country: string; capacity_mw: number; kind: string };
+type Bus = { i: number; id: string; lon: number; lat: number; v: number; virtual?: boolean };
+type Border = { border_id: string; bus: string; country: string; capacity_mw: number; kind: string; inject_bus?: string };
 type Behaviour = { type: string; [k: string]: unknown; modifiers?: Record<string, unknown>[] };
 type Asset = {
   id: string; name?: string; kind: "producer" | "consumer" | "storage"; carrier: string; bus: string;
@@ -19,7 +19,7 @@ type Grid = { buses: Bus[]; branches: Branch[]; borders: Border[]; behaviours: a
 type Sim = {
   snapshots: string[]; T: number; n_branches: number; n_buses: number;
   flow: Int16Array; inj: Int16Array; by_carrier: Record<string, number[]>;
-  border_total: number[]; trade_deviation: number[]; price: number[];
+  border_total: number[]; border_by_country: Record<string, number[]>; trade_deviation: number[]; price: number[];
   kpi: Record<string, number>; settings: Record<string, unknown>;
   rd: { enabled: boolean; up?: Int16Array; down?: Int16Array; before?: Int16Array;
         volume_gwh?: Record<string, number>; unresolved_mwh?: number; limit_pu?: number };
@@ -158,8 +158,8 @@ function render() {
   }
   layers.push(new ScatterplotLayer<Bus>({
     id: "buses", data: grid.buses, getPosition: (b) => [b.lon, b.lat], pickable: true,
-    getRadius: 1.6, radiusUnits: "pixels", getFillColor: (b) => (b.v >= 380 ? [200, 210, 220, 200] : [140, 150, 160, 160]),
-    onClick: (info) => info.object && openBus(info.object.id),
+    getRadius: (b) => (b.virtual ? 0 : 1.6), radiusUnits: "pixels", getFillColor: (b) => (b.v >= 380 ? [200, 210, 220, 200] : [140, 150, 160, 160]),
+    onClick: (info) => info.object && !info.object.virtual && openBus(info.object.id),
   }));
   if (sim?.rd.enabled && show("ly-rd")) {
     const mk = (id: string, arr: Int16Array | undefined, color: [number, number, number, number]) =>
@@ -172,14 +172,22 @@ function render() {
     layers.push(mk("rd-up", sim.rd.up, [79, 160, 255, 210]), mk("rd-down", sim.rd.down, [255, 160, 40, 210]));
   }
   if (show("ly-border")) {
-    const total = sim ? sim.border_total[hour] : 0;
-    const capSum = grid.borders.reduce((s, b) => s + b.capacity_mw, 0);
-    layers.push(new ScatterplotLayer<Border>({
-      id: "border", data: grid.borders, getPosition: (b) => posOfBus(b.bus), pickable: true,
-      getRadius: (b) => 5 + Math.sqrt(Math.abs((total * b.capacity_mw) / capSum)) * 0.6, radiusUnits: "pixels",
-      stroked: true, filled: false, getLineWidth: 2, lineWidthUnits: "pixels",
-      getLineColor: () => (total >= 0 ? [79, 195, 247, 230] : [255, 202, 40, 230]),
-      updateTriggers: { getRadius: [hour, sim], getLineColor: [hour, sim] },
+    const flowC = (c: string) => sim?.border_by_country?.[c]?.[hour] ?? 0;
+    const nodes = neighbourNodes();
+    layers.push(new ScatterplotLayer<any>({
+      id: "border", data: nodes, getPosition: (d) => d.pos, pickable: true,
+      getRadius: (d) => 7 + Math.sqrt(Math.abs(flowC(d.country))) * 0.45, radiusUnits: "pixels",
+      stroked: true, filled: true, getLineWidth: 2, lineWidthUnits: "pixels",
+      getFillColor: (d) => (flowC(d.country) >= 0 ? [79, 195, 247, 90] : [255, 202, 40, 90]),
+      getLineColor: (d) => (flowC(d.country) >= 0 ? [79, 195, 247, 240] : [255, 202, 40, 240]),
+      updateTriggers: { getRadius: [hour, sim], getLineColor: [hour, sim], getFillColor: [hour, sim] },
+    }));
+    layers.push(new TextLayer<any>({
+      id: "border-label", data: nodes, getPosition: (d) => d.pos,
+      getText: (d) => `${d.country} ${flowC(d.country) >= 0 ? "in" : "out"} ${fmt(Math.abs(flowC(d.country)) / 1000)} GW`,
+      getSize: 12, getColor: [230, 237, 243, 255], getPixelOffset: [0, -18], fontWeight: 600,
+      outlineWidth: 3, outlineColor: [11, 15, 20, 255], fontSettings: { sdf: true },
+      updateTriggers: { getText: [hour, sim] },
     }));
   }
   overlay.setProps({
@@ -200,8 +208,25 @@ function tooltip(o: any, layer?: string): string | null {
 redispatch UP ${fmt(rdAt(sim?.rd.up, o.i), 0)} MW (plants ramp up)`;
   if (layer === "rd-down") return `${o.id}
 redispatch DOWN ${fmt(rdAt(sim?.rd.down, o.i), 0)} MW (plants ramp down / curtailment)`;
-  if (layer === "border") return `${o.kind} to ${o.country}\n${fmt(o.capacity_mw, 0)} MW capacity\nborder flow is split pro rata by capacity (v0)`;
+  if (layer === "border") {
+    const f = sim?.border_by_country?.[o.country]?.[hour] ?? 0;
+    return `${o.country}: ${f >= 0 ? "import" : "export"} ${fmt(Math.abs(f), 0)} MW now\n${o.kinds.join(" + ")}, ${fmt(o.cap, 0)} MW capacity\nmeasured 2024 physical flow (Energy-Charts); one equivalent node per country`;
+  }
   return null;
+}
+
+let _nbNodes: { country: string; pos: [number, number]; kinds: string[]; cap: number }[] | null = null;
+function neighbourNodes() {
+  if (_nbNodes) return _nbNodes;
+  const by: Record<string, { country: string; pos: [number, number]; kinds: string[]; cap: number }> = {};
+  for (const b of grid.borders) {
+    const node = by[b.country] ?? (by[b.country] = { country: b.country, pos: [0, 0], kinds: [], cap: 0 });
+    node.cap += b.capacity_mw;
+    if (!node.kinds.includes(b.kind)) node.kinds.push(b.kind);
+    const ib = b.inject_bus ?? b.bus;
+    if (ib.startsWith("NB-") || node.pos[0] === 0) node.pos = posOfBus(ib);
+  }
+  return (_nbNodes = Object.values(by));
 }
 
 function posOfBus(id: string): [number, number] {
@@ -442,7 +467,8 @@ function methodPanel() {
   <h3>Known limits (v0)</h3><ul>
     <li>No regional weather: every wind/PV unit follows the national profile.</li>
     <li>Demand split by population only (industry not located).</li>
-    <li>Neighbouring grids not modelled; border flows split by interconnector capacity. The border carries SMARD's load-minus-generation gap (40.9 TWh in 2024), larger than the official net import (27.3 TWh), so imports at the borders are overstated.</li>
+    <li>Neighbours: each country is one equivalent node connected through its real cross-border lines; its measured 2024 physical exchange with Germany (Energy-Charts / Fraunhofer ISE, CC BY 4.0) is injected there, HVDC links at their German converter. Grids inside neighbouring countries and loop flows between them are not modelled; the measured border flows already include loop flows.</li>
+    <li>SMARD's load minus generation (40.9 TWh in 2024) is larger than the measured net import (25.1 TWh). The 15.8 TWh difference is treated as unmetered domestic supply, spread like demand.</li>
     <li>Offshore wind attached to the nearest coastal substation (offshore connections not in the OSM set).</li>
     <li>Conventional plants replay their technology's national output pro rata (no merit order yet).</li>
     <li>Distribution grid not modelled.</li></ul>`;
