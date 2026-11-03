@@ -21,6 +21,8 @@ type Sim = {
   flow: Int16Array; inj: Int16Array; by_carrier: Record<string, number[]>;
   border_total: number[]; trade_deviation: number[]; price: number[];
   kpi: Record<string, number>; settings: Record<string, unknown>;
+  rd: { enabled: boolean; up?: Int16Array; down?: Int16Array; before?: Int16Array;
+        volume_gwh?: Record<string, number>; unresolved_mwh?: number; limit_pu?: number };
 };
 
 // ------------------------------------------------------------------ constants
@@ -86,7 +88,12 @@ function loadingColor(l: number, t: number): [number, number, number, number] {
   return [231, 76, 60, 235];
 }
 
-function flowAt(i: number): number { return sim ? sim.flow[hour * sim.n_branches + i] : 0; }
+function flowAt(i: number): number {
+  if (!sim) return 0;
+  const src = $<HTMLInputElement>("ly-before").checked && sim.rd.before ? sim.rd.before : sim.flow;
+  return src[hour * sim.n_branches + i];
+}
+function rdAt(arr: Int16Array | undefined, i: number): number { return sim && arr ? arr[hour * sim.n_buses + i] : 0; }
 function loadingAt(i: number): number { return Math.abs(flowAt(i)) / grid.branches[i].s_nom; }
 function injAt(i: number): number { return sim ? sim.inj[hour * sim.n_buses + i] : 0; }
 
@@ -154,6 +161,16 @@ function render() {
     getRadius: 1.6, radiusUnits: "pixels", getFillColor: (b) => (b.v >= 380 ? [200, 210, 220, 200] : [140, 150, 160, 160]),
     onClick: (info) => info.object && openBus(info.object.id),
   }));
+  if (sim?.rd.enabled && show("ly-rd")) {
+    const mk = (id: string, arr: Int16Array | undefined, color: [number, number, number, number]) =>
+      new ScatterplotLayer<Bus>({
+        id, data: grid.buses.filter((b) => rdAt(arr, b.i) > 1), getPosition: (b) => [b.lon, b.lat],
+        getRadius: (b) => Math.sqrt(rdAt(arr, b.i)) * 260, radiusUnits: "meters", pickable: true,
+        getFillColor: color, stroked: true, getLineColor: [255, 255, 255, 200], getLineWidth: 1, lineWidthUnits: "pixels",
+        updateTriggers: { getRadius: [hour, sim] }, onClick: (info) => info.object && openBus(info.object.id),
+      });
+    layers.push(mk("rd-up", sim.rd.up, [79, 160, 255, 210]), mk("rd-down", sim.rd.down, [255, 160, 40, 210]));
+  }
   if (show("ly-border")) {
     const total = sim ? sim.border_total[hour] : 0;
     const capSum = grid.borders.reduce((s, b) => s + b.capacity_mw, 0);
@@ -179,6 +196,10 @@ function tooltip(o: any, layer?: string): string | null {
   }
   if (layer === "inj" || layer === "buses") return `${o.id} (${o.v} kV)\nnet injection ${fmt(injAt(o.i), 0)} MW\nclick for assets`;
   if (layer === "assets") return `${o.name ?? o.id}\n${o.carrier} · ${fmt(o.p_nom ?? 0, 1)} MW${o.n_units ? ` · ${o.n_units} units` : ""}`;
+  if (layer === "rd-up") return `${o.id}
+redispatch UP ${fmt(rdAt(sim?.rd.up, o.i), 0)} MW (plants ramp up)`;
+  if (layer === "rd-down") return `${o.id}
+redispatch DOWN ${fmt(rdAt(sim?.rd.down, o.i), 0)} MW (plants ramp down / curtailment)`;
   if (layer === "border") return `${o.kind} to ${o.country}\n${fmt(o.capacity_mw, 0)} MW capacity\nborder flow is split pro rata by capacity (v0)`;
   return null;
 }
@@ -208,6 +229,9 @@ function updateKpis() {
   $("k-price").textContent = `${fmt(sim.price[hour], 0)} €/MWh`;
   $("k-max").textContent = `${fmt(maxL * 100, 0)}%`;
   $("k-over").textContent = `${n70} / ${n100}`;
+  let up = 0;
+  if (sim.rd.enabled && sim.rd.up) for (let i = 0; i < sim.n_buses; i++) up += rdAt(sim.rd.up, i);
+  $("k-rd").textContent = sim.rd.enabled ? `${fmt(up / 1000)} GW` : "off";
   drawMix();
 }
 
@@ -373,15 +397,19 @@ async function runSim() {
   try {
     const raw = await api<any>("/api/simulate", { method: "POST", body: JSON.stringify({
       start: $<HTMLInputElement>("in-start").value, hours: Number($<HTMLSelectElement>("in-hours").value),
-      balancing: $<HTMLSelectElement>("in-bal").value, seed: Number($<HTMLInputElement>("in-seed").value) }) });
+      balancing: $<HTMLSelectElement>("in-bal").value, seed: Number($<HTMLInputElement>("in-seed").value),
+      redispatch_limit: $<HTMLSelectElement>("in-rd").value ? Number($<HTMLSelectElement>("in-rd").value) : null }) });
     if (token !== simToken) return;
-    sim = { ...raw, flow: decodeI16(raw.flow_i16), inj: decodeI16(raw.injection_i16) };
+    const r = raw.redispatch ?? { enabled: false };
+    sim = { ...raw, flow: decodeI16(raw.flow_i16), inj: decodeI16(raw.injection_i16),
+      rd: r.enabled ? { ...r, up: decodeI16(r.up_i16), down: decodeI16(r.down_i16), before: decodeI16(r.flow_before_i16) } : { enabled: false } };
     const s = $<HTMLInputElement>("slider");
     s.max = String(sim!.T - 1);
     hour = Math.min(hour, sim!.T - 1); s.value = String(hour);
     const k = sim!.kpi;
     $("run-status").textContent = `${sim!.T} h in ${fmt((performance.now() - t0) / 1000)} s · max loading ${fmt(k.max_loading * 100, 0)}% · ` +
-      `${k.line_hours_over_100pct} overloaded line-hours · max trade deviation ${fmt(k.max_trade_deviation_mw, 0)} MW`;
+      `${k.line_hours_over_100pct} overloaded line-hours · max trade deviation ${fmt(k.max_trade_deviation_mw, 0)} MW` +
+      (sim!.rd.enabled ? ` · redispatch ${fmt(sim!.rd.volume_gwh!.up_plus_down, 0)} GWh (up+down) in this window, unresolved ${fmt(sim!.rd.unresolved_mwh!, 0)} MWh` : "");
     updateKpis(); render();
     if (selected?.type === "branch") openBranch(selected.i);
   } catch (e) { $("run-status").textContent = String(e); }
@@ -409,11 +437,12 @@ function methodPanel() {
     <li>Producers: MaStR units in operation at 2024-12-31; units ≥ 10 MW individually, smaller ones aggregated per substation and technology; all attached to the nearest substation.</li>
     <li>Behaviour: each producer = rated MW × the 2024 national hourly capacity factor of its technology (SMARD output ÷ MaStR capacity). Demand = national SMARD load × population share of the substation's area.</li>
     <li>Balancing: historical 2024 net import is kept at the border; your edits are absorbed by dispatchable plants (or the border, if chosen).</li>
+    <li>Redispatch (optional): per hour, the smallest total up/down adjustment of plants (and curtailment) that keeps every line within the chosen limit. This is a lower bound on the operators' work, not German practice (no cost order, no reserve plants, no countertrading, no full n-1 analysis). Real 2024 congestion-management volume: about 30,320 GWh (BNetzA Monitoringbericht 2025).</li>
     <li>Flows: DC power flow via the PTDF matrix; loading = |flow| / s_nom.</li></ol>
   <h3>Known limits (v0)</h3><ul>
     <li>No regional weather: every wind/PV unit follows the national profile.</li>
     <li>Demand split by population only (industry not located).</li>
-    <li>Neighbouring grids not modelled; border flows split by interconnector capacity.</li>
+    <li>Neighbouring grids not modelled; border flows split by interconnector capacity. The border carries SMARD's load-minus-generation gap (40.9 TWh in 2024), larger than the official net import (27.3 TWh), so imports at the borders are overstated.</li>
     <li>Offshore wind attached to the nearest coastal substation (offshore connections not in the OSM set).</li>
     <li>Conventional plants replay their technology's national output pro rata (no merit order yet).</li>
     <li>Distribution grid not modelled.</li></ul>`;
@@ -429,7 +458,9 @@ function wire() {
   document.querySelectorAll<HTMLButtonElement>(".speeds button").forEach((b) => b.addEventListener("click", () => {
     speed = Number(b.dataset.speed); document.querySelectorAll(".speeds button").forEach((x) => x.classList.remove("on")); b.classList.add("on");
   }));
-  ["ly-lines", "ly-flow", "ly-inj", "ly-assets", "ly-border"].forEach((id) => $(id).addEventListener("change", render));
+  ["ly-lines", "ly-flow", "ly-inj", "ly-assets", "ly-border", "ly-rd"].forEach((id) => $(id).addEventListener("change", render));
+  $("ly-before").addEventListener("change", () => { updateKpis(); render(); });
+  $("in-rd").addEventListener("change", runSim);
   $("close-right").addEventListener("click", () => { $("right").classList.add("hidden"); selected = null; });
   $("btn-method").addEventListener("click", methodPanel);
   $("sc-save").addEventListener("click", async () => {

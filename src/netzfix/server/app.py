@@ -26,6 +26,7 @@ class SimRequest(BaseModel):
     hours: int = 168
     balancing: str | None = None
     seed: int | None = None
+    redispatch_limit: float | None = None   # e.g. 1.0 or 0.7; None = off
 
 
 @app.get("/api/grid")
@@ -68,7 +69,8 @@ def delete_asset(asset_id: str) -> dict:
 @app.post("/api/simulate")
 def run(req: SimRequest) -> dict:
     try:
-        return pg().run(req.start, req.hours, req.balancing, req.seed)
+        return pg().run(req.start, req.hours, req.balancing, req.seed,
+                        req.redispatch_limit)
     except ValueError as e:
         raise HTTPException(400, str(e)) from e
 

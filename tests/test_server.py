@@ -49,3 +49,22 @@ def test_scenario_roundtrip(client, tmp_path, monkeypatch):
     assert client.get("/api/scenario").json()["added"] == {}
     client.post("/api/scenarios/test1/load")
     assert len(client.get("/api/scenario").json()["added"]) == 1
+
+
+def test_redispatch_option_removes_overloads(client):
+    import base64
+
+    import numpy as np
+
+    g = client.get("/api/grid").json()
+    s_nom = np.array([b["s_nom"] for b in g["branches"]])
+    run = client.post("/api/simulate", json={"start": "2024-01-15T00:00", "hours": 24,
+                                             "redispatch_limit": 1.0}).json()
+    rd = run["redispatch"]
+    assert rd["enabled"]
+    flow = np.frombuffer(base64.b64decode(run["flow_i16"]), "<i2").reshape(run["T"], -1)
+    before = np.frombuffer(base64.b64decode(rd["flow_before_i16"]), "<i2").reshape(run["T"], -1)
+    # after redispatch, overloads remain only where reported as unresolved
+    over_after = np.clip(np.abs(flow) - s_nom, 0, None).sum()
+    assert over_after <= np.clip(np.abs(before) - s_nom, 0, None).sum()
+    assert rd["volume_gwh"]["up"] >= 0

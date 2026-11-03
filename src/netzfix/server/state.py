@@ -177,7 +177,7 @@ class Playground:
 
     # ------------------------------------------------------------------ simulation
     def run(self, start: str, hours: int, balancing: str | None = None,
-            seed: int | None = None) -> dict:
+            seed: int | None = None, redispatch_limit: float | None = None) -> dict:
         t0 = pd.Timestamp(start)
         t0 = t0.tz_localize("Europe/Berlin") if t0.tzinfo is None else t0
         win = self.ts[(self.ts.index >= t0.tz_convert("UTC"))].iloc[:hours]
@@ -190,10 +190,31 @@ class Playground:
         r = simulate(self.assets(), self.buses, self.ptdf, self.branches, self.s_nom,
                      self.grid.borders, ctx, balancing=bal)
         T = len(win)
+        flow_before = r.flow
+        rd_payload: dict = {"enabled": False}
+        if redispatch_limit:
+            from netzfix.sim.redispatch import redispatch
+
+            rd = redispatch(r.flow, self.ptdf, self.s_nom, r.headroom_bus, r.disp_bus, r.res_bus,
+                            limit_pu=float(redispatch_limit))
+            v = rd.volume_twh()
+            net = rd.up - rd.down_disp - rd.down_res        # T x buses, + = more injection
+            r.flow = rd.flow
+            r.injection = r.injection + net
+            rd_payload = {
+                "enabled": True, "limit_pu": float(redispatch_limit),
+                "up_i16": _b64(np.clip(np.rint(rd.up), 0, 32767), "<i2"),
+                "down_i16": _b64(np.clip(np.rint(rd.down_disp + rd.down_res), 0, 32767), "<i2"),
+                "volume_gwh": {k: round(x * 1e3, 1) for k, x in v.items()},
+                "unresolved_mwh": round(float(rd.unresolved.sum()), 1),
+                "hourly_mw": np.round(rd.up.sum(axis=1), 1).tolist(),
+                "flow_before_i16": _b64(np.clip(np.rint(flow_before), -32767, 32767), "<i2"),
+            }
         flow = np.clip(np.rint(r.flow), -32767, 32767)
         inj = np.clip(np.rint(r.injection), -32767, 32767)
-        loading = r.loading
+        loading = np.abs(r.flow) / self.s_nom
         return {
+            "redispatch": rd_payload,
             "snapshots": [t.isoformat() for t in win.index],
             "T": T, "n_branches": len(self.branches), "n_buses": len(self.buses),
             "flow_i16": _b64(flow, "<i2"),

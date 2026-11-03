@@ -17,6 +17,7 @@
       <div class="kpi"><label>Price DE-LU</label><b id="k-price">–</b></div>
       <div class="kpi"><label>Max line loading</label><b id="k-max">–</b></div>
       <div class="kpi"><label>Lines &gt;70% / &gt;100%</label><b id="k-over">–</b></div>
+      <div class="kpi"><label>Redispatch now</label><b id="k-rd">–</b></div>
       <button id="btn-method" class="ghost">Data &amp; method</button>
     </header>
 
@@ -30,6 +31,13 @@
           <option value="border">border absorbs everything</option>
         </select>
       </label>
+      <label>Redispatch (operator fixes overloads)
+        <select id="in-rd">
+          <option value="">off – show market flows</option>
+          <option value="1.0" selected>keep lines ≤ 100 %</option>
+          <option value="0.7">keep lines ≤ 70 % (n-1 proxy, slower)</option>
+        </select>
+      </label>
       <label>Seed <input id="in-seed" type="number" value="0" /></label>
       <button id="btn-run">Simulate</button>
       <div id="run-status" class="muted"></div>
@@ -40,6 +48,8 @@
       <label class="chk"><input type="checkbox" id="ly-inj" checked /> Net injection per substation</label>
       <label class="chk"><input type="checkbox" id="ly-assets" /> Producers &amp; storage (MW)</label>
       <label class="chk"><input type="checkbox" id="ly-border" checked /> Border points</label>
+      <label class="chk"><input type="checkbox" id="ly-rd" checked /> Redispatch up / down</label>
+      <label class="chk"><input type="checkbox" id="ly-before" /> Show flows before redispatch</label>
 
       <h3>Scenario</h3>
       <div class="row"><select id="sc-list"></select><button id="sc-load" class="ghost">Load</button></div>
