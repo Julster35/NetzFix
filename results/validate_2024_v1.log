@@ -1,0 +1,2 @@
+INFO:pypsa.network.io:Imported network 'Unnamed Network' has buses, carriers, lines, transformers
+limit 1.0: {'seconds': 626.1, 'volume_twh': {'up': np.float64(93.196), 'down_dispatchable': np.float64(45.658), 'down_curtail': np.float64(47.538), 'up_plus_down': np.float64(186.391)}, 'hours_with_redispatch': 8482, 'unresolved_mwh': 2392562.6, 'hours_unresolved': 5987, 'line_hours_over_limit_after': 6708}

@@ -39,6 +39,13 @@ REF = {
 }
 
 
+def _de_circuit_km(n) -> float:
+    """Circuit km of lines with both ends in Germany (no border or equivalent lines)."""
+    de = set(n.buses.index[n.buses.country == "DE"])
+    l = n.lines[n.lines.bus0.isin(de) & n.lines.bus1.isin(de)]
+    return float((l.length * l.num_parallel).sum())
+
+
 def main() -> None:
     out_dir = RESULTS / "validation_2024"
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -48,7 +55,7 @@ def main() -> None:
     r = pg.simulate(ctx)
     lines = n.lines
     model = {
-        "tso_circuit_km": float((lines.length * lines.num_parallel).sum()),
+        "tso_circuit_km": float(_de_circuit_km(n)),
         "peak_load_gw": float(pg.ts.load.max() / 1e3),
         "net_import_twh_smard_residual": float(historical_import(pg.ts).sum() / 1e6),
         "net_import_twh": float(r.border.sum(axis=1).sum() / 1e6),

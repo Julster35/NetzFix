@@ -4,13 +4,16 @@ What is built (see vault/project/Assumptions.md, A4 and A17-A19):
 - Buses: German substations (country == DE) in the largest AC-connected component.
 - Lines: AC lines with both ends in that component (s_nom, r, x, b from the OSM dataset).
 - Transformers: OSM s_nom; x = 0.1 p.u. (PyPSA-Eur default `transformers.x`, config at v2026.09.0).
-- Neighbours (A18 v1): each neighbouring country is ONE virtual bus `NB-<CC>` (at the mean position
-  of the foreign line ends), connected through the real cross-border AC lines (their own r, x,
-  s_nom). The country's measured physical exchange is injected at that bus, so the split over its
-  parallel border lines follows the impedances. Neighbour-internal grids and loop flows *between*
-  neighbours are not modelled (the measured border flows already contain loop flows).
+- Neighbours (A18 v1): each AC neighbour's own OSM grid is Kron-reduced onto its border substations
+  plus one hub (the bus nearest the centroid of its grid component). The result is an exact DC
+  equivalent seen from the border: equivalent lines `EQ-...` (no thermal limit) between the kept
+  buses `NB-<CC>:<osm bus>`, plus the real cross-border lines. The country's measured physical
+  exchange is injected at its hub(s). A first version with one copper-plate node per country gave
+  ~4 GW of fake transit through NL (2026-11-03), hence the reduction.
+  Not modelled: loop flows between neighbours (third-country paths); the measured border flows
+  contain them in total but the routing inside DE does not see them.
 - HVDC interconnectors are controllable: their share is injected at the German converter bus.
-- `borders` lists every border element with `inject_bus` (NB-<CC> for AC, converter bus for HVDC).
+- `borders` lists every border element with `inject_bus` (hub for AC, converter bus for HVDC).
 """
 
 from __future__ import annotations
@@ -27,6 +30,72 @@ from netzfix.config import DATA_PROCESSED
 from netzfix.data import osm_grid
 
 TRANSFORMER_X_PU = 0.1  # PyPSA-Eur config.default.yaml `transformers.x` (v2026.09.0)
+S_BASE = 100.0          # MVA, per-unit base for the Kron reduction
+EQ_V = 380.0            # kV at which equivalent-line reactances are expressed
+EQ_S_NOM = 1e6          # MVA: equivalent lines are fictitious, never a constraint
+
+
+def _kron_equivalent(cc: str, boundary: list[str], b: pd.DataFrame, ln: pd.DataFrame,
+                     tr: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, str]]:
+    """Reduce country `cc`'s AC grid onto `boundary` buses + one hub per grid component.
+
+    Returns (kept buses [id, x, y, v_nom], equivalent lines [bus0, bus1, x_ohm],
+    map boundary bus -> hub bus). Susceptances in p.u. on S_BASE; line x in ohm at bus0's kV.
+    """
+    import scipy.sparse as sp
+    from scipy.sparse.linalg import splu
+
+    bus = b[(b.country == cc) & (b.dc == "f")].set_index("bus_id")
+    lc = ln[ln.bus0.isin(bus.index) & ln.bus1.isin(bus.index)]
+    tc = tr[tr.bus0.isin(bus.index) & tr.bus1.isin(bus.index)]
+    g = nx.Graph()
+    g.add_edges_from(zip(lc.bus0, lc.bus1, strict=True))
+    g.add_edges_from(zip(tc.bus0, tc.bus1, strict=True))
+    g.add_nodes_from(boundary)
+    kept, eq, hub_of = [], [], {}
+    for comp in nx.connected_components(g):
+        bnd = [x for x in boundary if x in comp]
+        if not bnd:
+            continue
+        cb = bus.loc[sorted(comp)]
+        cx, cy = cb.x.mean(), cb.y.mean()
+        hub = ((cb.x - cx) ** 2 + (cb.y - cy) ** 2).idxmin()
+        K = list(dict.fromkeys(bnd + [hub]))
+        order = K + [x for x in cb.index if x not in K]
+        idx = {x: i for i, x in enumerate(order)}
+        rows, cols, vals = [], [], []
+
+        def add(i: int, j: int, y: float, rows=rows, cols=cols, vals=vals) -> None:
+            rows.extend([i, j, i, j])
+            cols.extend([j, i, i, j])
+            vals.extend([-y, -y, y, y])
+
+        for r in lc[lc.bus0.isin(comp)].itertuples():
+            z_base = float(bus.at[r.bus0, "voltage"]) ** 2 / S_BASE
+            add(idx[r.bus0], idx[r.bus1], 1.0 / max(float(r.x) / z_base, 1e-6))
+        for r in tc[tc.bus0.isin(comp)].itertuples():
+            add(idx[r.bus0], idx[r.bus1], float(r.s_nom) / (TRANSFORMER_X_PU * S_BASE))
+        nb = len(order)
+        B = sp.csc_matrix((vals, (rows, cols)), shape=(nb, nb))
+        k = len(K)
+        if nb > k:
+            BKK, BKI = B[:k, :k].toarray(), B[:k, k:]
+            BII, BIK = B[k:, k:], B[k:, :k]
+            red = BKK - BKI @ splu(BII.tocsc()).solve(BIK.toarray())
+        else:
+            red = B.toarray()
+        z_eq = EQ_V ** 2 / S_BASE
+        scale = np.abs(np.diag(red)).max()
+        for i in range(k):
+            for j in range(i + 1, k):
+                y = -red[i, j]
+                if y > 1e-9 * scale:
+                    eq.append({"bus0": K[i], "bus1": K[j], "x_ohm": z_eq / y})
+        kept += [{"id": x, "x": bus.at[x, "x"], "y": bus.at[x, "y"],
+                  "v_nom": float(bus.at[x, "voltage"])} for x in K]
+        for x in bnd:
+            hub_of[x] = hub
+    return pd.DataFrame(kept).drop_duplicates("id"), pd.DataFrame(eq), hub_of
 
 
 @dataclass
@@ -76,24 +145,30 @@ def build() -> Grid:
     rows = []
     cross = ln[ln.bus0.isin(main) != ln.bus1.isin(main)]
     cross = cross[(cross.bus0.isin(main) | cross.bus1.isin(main))].set_index("line_id")
-    bxy = b.set_index("bus_id")[["x", "y"]]
     ends: dict[str, list[str]] = {}
+    for _, r in cross.iterrows():
+        other = r.bus1 if r.bus0 in main else r.bus0
+        ends.setdefault(country.get(other, "?"), []).append(other)
+    hub_of: dict[str, str] = {}
+    for cc, others in ends.items():
+        kept, eq, hubs = _kron_equivalent(cc, list(dict.fromkeys(others)), b, ln, tr)
+        nm = {x: f"NB-{cc}:{x}" for x in kept.id}
+        n.add("Bus", [nm[x] for x in kept.id], v_nom=kept.v_nom.to_numpy(),
+              x=kept.x.to_numpy(), y=kept.y.to_numpy(), carrier="AC", country=cc)
+        if len(eq):
+            n.add("Line", [f"EQ-{cc}-{i}" for i in range(len(eq))],
+                  bus0=[nm[x] for x in eq.bus0], bus1=[nm[x] for x in eq.bus1],
+                  x=eq.x_ohm.to_numpy(), r=0.0, s_nom=EQ_S_NOM, carrier="equivalent")
+        hub_of.update({x: nm[h] for x, h in hubs.items()})
     for lid, r in cross.iterrows():
         de_bus, other = (r.bus0, r.bus1) if r.bus0 in main else (r.bus1, r.bus0)
-        cc = country.get(other, "?")
-        ends.setdefault(cc, []).append(other)
-        rows.append({"border_id": lid, "bus": de_bus, "country": cc,
+        rows.append({"border_id": lid, "bus": de_bus, "country": country.get(other, "?"),
                      "capacity_mw": float(r.s_nom), "kind": "AC line",
-                     "inject_bus": f"NB-{cc}"})
-    for cc, others in ends.items():
-        xy = bxy.loc[others].mean()
-        n.add("Bus", f"NB-{cc}", v_nom=380.0, x=float(xy.x), y=float(xy.y), carrier="AC",
-              country=cc)
+                     "inject_bus": hub_of[other]})
     ac_x = cross.copy()
-    ac_x["fb0"] = [f"NB-{country.get(r.bus0)}" if r.bus0 not in main else r.bus0
-                   for r in ac_x.itertuples()]
-    ac_x["fb1"] = [f"NB-{country.get(r.bus1)}" if r.bus1 not in main else r.bus1
-                   for r in ac_x.itertuples()]
+    fname = {o: f"NB-{country.get(o)}:{o}" for os_ in ends.values() for o in os_}
+    ac_x["fb0"] = [fname.get(r.bus0, r.bus0) for r in ac_x.itertuples()]
+    ac_x["fb1"] = [fname.get(r.bus1, r.bus1) for r in ac_x.itertuples()]
     n.add("Line", ac_x.index, bus0=ac_x.fb0, bus1=ac_x.fb1, s_nom=ac_x.s_nom, r=ac_x.r,
           x=ac_x.x, b=ac_x.b, length=ac_x.length / 1e3, carrier="AC",
           num_parallel=ac_x.circuits.astype(float))

@@ -171,6 +171,7 @@ class Playground:
             df = n.lines if comp == "Line" else n.transformers
             v = (n.buses.at[df.at[bid, "bus0"], "v_nom"])
             branches.append({"i": k, "id": bid, "kind": comp, "v": float(v),
+                             "equivalent": bid.startswith("EQ-"),
                              "s_nom": round(float(self.s_nom[k]), 1),
                              "path": [[round(x, 5), round(y, 5)] for x, y in coords]})
         buses = [{"i": i, "id": b, "lon": round(float(n.buses.at[b, "x"]), 5),

@@ -6,7 +6,7 @@ import { PathLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers";
 import { TripsLayer } from "@deck.gl/geo-layers";
 
 // ------------------------------------------------------------------ types
-type Branch = { i: number; id: string; kind: string; v: number; s_nom: number; path: [number, number][] };
+type Branch = { i: number; id: string; kind: string; v: number; s_nom: number; path: [number, number][]; equivalent?: boolean };
 type Bus = { i: number; id: string; lon: number; lat: number; v: number; virtual?: boolean };
 type Border = { border_id: string; bus: string; country: string; capacity_mw: number; kind: string; inject_bus?: string };
 type Behaviour = { type: string; [k: string]: unknown; modifiers?: Record<string, unknown>[] };
@@ -100,7 +100,7 @@ function injAt(i: number): number { return sim ? sim.inj[hour * sim.n_buses + i]
 // precomputed normalised timestamps for the flow animation
 let tripBase: { i: number; path: [number, number][]; ts: number[] }[] = [];
 function buildTrips() {
-  tripBase = grid.branches.map((b) => {
+  tripBase = grid.branches.filter((b) => !b.equivalent).map((b) => {
     const d = [0];
     for (let k = 1; k < b.path.length; k++) {
       const [x0, y0] = b.path[k - 1], [x1, y1] = b.path[k];
@@ -118,7 +118,7 @@ function render() {
   const layers: any[] = [];
   if (show("ly-lines")) {
     layers.push(new PathLayer<Branch>({
-      id: "lines", data: grid.branches, getPath: (b) => b.path, pickable: true,
+      id: "lines", data: grid.branches.filter((b) => !b.equivalent), getPath: (b) => b.path, pickable: true,
       getColor: (b) => (sim ? loadingColor(loadingAt(b.i), animT) : [90, 110, 130, 200]),
       getWidth: (b) => (b.v >= 380 ? 3 : b.v >= 220 ? 1.8 : 1.2), widthUnits: "pixels",
       updateTriggers: { getColor: [hour, sim, Math.floor(animT * 4)] },
