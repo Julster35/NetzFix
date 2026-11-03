@@ -138,6 +138,18 @@ def build() -> Path:
     off = (u.carrier == "wind_offshore").to_numpy()
     ehv = buses[buses.v_nom >= 380]
     u.loc[off, "bus"], u.loc[off, "dist_km"] = nearest_bus(ehv, u.lon[off], u.lat[off])
+    # A19d: offshore units with a reconstructed HVDC connection (MaStR connection point ->
+    # platform -> OSM export cable) land at that cable's onshore 380 kV bus.
+    conn_file = DATA_PROCESSED / "offshore_connections.csv"
+    if conn_file.exists():
+        conn = pd.read_csv(conn_file).dropna(subset=["landing_bus"])
+        landing = u.EinheitMastrNummer.astype(str).map(conn.set_index("unit").landing_bus)
+        hit = off & landing.notna().to_numpy()
+        u.loc[hit, "bus"] = landing[hit]
+        u.loc[hit, "loc_source"] = "offshore_hvdc_route"
+        report["offshore_mw_by_attachment"] = {
+            "hvdc_route": round(float(u.loc[hit, "p"].sum()), 1),
+            "nearest_380kV": round(float(u.loc[off & ~hit, "p"].sum()), 1)}
     report["median_dist_km"] = round(float(u.dist_km.median()), 1)
 
     monthly = active * u.p.to_numpy()[:, None]                               # MW per month-end
