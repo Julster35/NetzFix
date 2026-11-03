@@ -39,6 +39,9 @@ class Result:
     by_carrier: pd.DataFrame    # T x carrier, MW (producers/storage +, "load" = demand)
     border: pd.DataFrame        # T x border_id, MW (+ = import into DE)
     trade_deviation: np.ndarray  # T, MW import beyond the 2024 net import (keep_trade) or total
+    res_bus: np.ndarray         # T x buses, MW non-dispatchable generation (curtailable)
+    disp_bus: np.ndarray        # T x buses, MW dispatchable generation (can go down)
+    headroom_bus: np.ndarray    # T x buses, MW dispatchable headroom (can go up)
 
 
 def historical_import(ts: pd.DataFrame) -> np.ndarray:
@@ -65,6 +68,7 @@ def simulate(
     T, nb = ctx.n, len(buses)
     bidx = {b: i for i, b in enumerate(buses)}
     inj = np.zeros((T, nb))
+    res_bus = np.zeros((T, nb))
     carriers: dict[str, np.ndarray] = {}
     disp_rows: list[np.ndarray] = []
     disp_pmax: list[np.ndarray] = []
@@ -92,6 +96,7 @@ def simulate(
         else:
             gen = cap_t * cf                                   # buses x T
             inj += gen.T
+            res_bus += gen.T
             add_carrier(carrier, gen.sum(axis=0))
 
     # 2) everything else, asset by asset
@@ -110,6 +115,8 @@ def simulate(
             add_carrier("load", x)
         else:  # non-dispatchable producer or storage
             inj[:, i] += x
+            if a["kind"] == "producer":
+                res_bus[:, i] += x
             add_carrier(c, x)
 
     # 3) balancing
@@ -126,8 +133,12 @@ def simulate(
                 disp[:, t] += up_room[:, t] * min(1.0, d / room)
             elif d < 0 and (room := disp[:, t].sum()) > 0:
                 disp[:, t] -= disp[:, t] * min(1.0, -d / room)
+    disp_bus = np.zeros((T, nb))
+    headroom_bus = np.zeros((T, nb))
     for k, (i, c) in enumerate(disp_meta):
         inj[:, i] += disp[k]
+        disp_bus[:, i] += disp[k]
+        headroom_bus[:, i] += np.clip(pmax[k] - disp[k], 0, None)
         add_carrier(c, disp[k])
 
     border_total = -inj.sum(axis=1)                            # + = import
@@ -143,4 +154,5 @@ def simulate(
         by_carrier=pd.DataFrame(carriers, index=ctx.ts.index),
         border=pd.DataFrame(border, index=ctx.ts.index, columns=borders.border_id),
         trade_deviation=border_total - target,
+        res_bus=res_bus, disp_bus=disp_bus, headroom_bus=headroom_bus,
     )

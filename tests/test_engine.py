@@ -80,6 +80,27 @@ def test_keep_trade_displaces_dispatchable(tri):
     assert np.allclose(r1.border["X"], 0) and np.allclose(r1.trade_deviation, 0)
 
 
+def test_redispatch_removes_overload_with_minimum_volume(tri):
+    from netzfix.sim.redispatch import redispatch
+
+    P, branches, buses, s_nom, borders = tri
+    ia, ib, ic = (buses.index(x) for x in "ABC")
+    # 150 MW from A to B: AB carries 100 (limit 100 -> ok), now push 180: AB = 120 > 100
+    inj = np.zeros((1, 3))
+    inj[0, ia], inj[0, ib] = 180, -180
+    f0 = inj @ P.T
+    head = np.zeros((1, 3))
+    head[0, ib] = 500                       # a plant at B can ramp up
+    disp = np.zeros((1, 3))
+    disp[0, ia] = 180                       # the plant at A can ramp down
+    rd = redispatch(f0, P, s_nom, head, disp, np.zeros((1, 3)), limit_pu=1.0)
+    assert np.abs(rd.flow).max() <= 100 + 1e-6
+    # AB flow = 2/3 of the A->B transfer; must fall from 120 to 100 -> transfer 150 -> shift 30 MW
+    assert rd.up.sum() == pytest.approx(30, abs=1e-4)
+    assert rd.down_disp.sum() == pytest.approx(30, abs=1e-4)
+    assert rd.unresolved.sum() == pytest.approx(0)
+
+
 def test_outage_rate_and_seed_reproducibility():
     ctx = ctx_fixture(T=200_000)
     a = producer("w", "A", "wind_onshore", 100.0,
