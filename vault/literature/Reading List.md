@@ -32,6 +32,9 @@ This is the catalog of all literature for NetzFix. **Held** items have a PDF in 
 | [[EnWG 13 13a Redispatch]] | **Law**: redispatch selection (least cost, minimum factor, grid reserve) and compensation | `EnWG_Stand_2026-11-04_gesetze-im-internet.pdf` (text as of 2026-07-23) | § 13 Abs. 1-3, § 13a, § 13j Abs. 5-6 |
 | [[BNetzA 2020 Mindestfaktor-Festlegung]] | EE minimum factor 10; annual calculated prices | `BNetzA_2020-11-30_Mindestfaktor-Festlegung.pdf` | tenor, pp. 1-7, 39-41 |
 | [[netztransparenz Kalkulatorische Preise]] | TSOs' calculated EE / NR prices and average conventional RD costs 2021-2027 | `netztransparenz_2026-11-04_Kalkulatorische_Preise.html` | whole page |
+| [[BNetzA 2026 MiSpeL-Festlegung]] | Storage multi-use (grid + PV) under EEG; 2024 home batteries self-consumption only | `BNetzA_2026-10-01_MiSpeL-Festlegung_Tenor_mit_Begruendung.pdf`, `BNetzA_2026-10-01_MiSpeL_Hintergrundpapier.pdf` | Hintergrundpapier; Tenor searched |
+| [[DEHSt 2024 Auctioning Reports]] | EUA auction prices 2024 (monthly) | `DEHSt_2024_Auctioning_Report_Q1..Q4.pdf` | Q4 p. 3 |
+| [[DIW 2013 DD68 Schroeder et al]] | Plant efficiency, minimum load, up/down times | `DIW_2013_DD68_..._Costs_of_Electricity_Generation.pdf` | Tables 27, 28, 35 |
 | (no note yet) | BNetzA BK8-22-0001-A (2024): appropriate financial compensation of redispatch (§ 13a Abs. 2) + Anlage 1 | `BNetzA_2024_BK8-22-0001-A_Festlegung_Verguetung_Redispatch.pdf`, `..._Anlage1_Bestimmung_finanzieller_Ausgleich.pdf` | not read yet |
 
 ## To fetch next (grey literature and data documentation)
@@ -46,6 +49,7 @@ This is the catalog of all literature for NetzFix. **Held** items have a PDF in 
 - Gerhardt et al. (2025), zonal split with a proprietary data set - cited in Knörr et al. p. 7.
 - Kost et al. (2021), fixed costs - cited in Knörr et al. p. 40.
 - ACER Decision 11/2022 and its annexes (BZ configurations).
+- 2024 hard-coal price (API2 cif ARA): not held; BAFA and Destatis import-price series were discontinued in 2023 (stated on their pages, 2026-11-04); vdki.de unreachable 2026-11-04.
 - BMWi (2018-04-27) "Entwicklung von Maßnahmen zur effizienten Gewährleistung der Systemsicherheit im deutschen Stromnetz", p. 80 (formula minimum factor → calculated price) - cited in [[BNetzA 2020 Mindestfaktor-Festlegung]] p. 6 and [[netztransparenz Kalkulatorische Preise]]. Download failed 2026-11-04 (bundeswirtschaftsministerium.de timed out). Formula reconstructed from published numbers instead.
 - Xiong et al. 2025 Scientific Data version of record (only the arXiv preprint is held).
 - BMWE "Aktionsplan Gebotszone" press release, 2025-12-15 (web search only; see [[Prior Art#4. Policy context (secondary sources, not held - do not cite as evidence)]]).

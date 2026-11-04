@@ -26,3 +26,8 @@ The regulators' annual monitoring report covering 2024; NetzFix's main held sour
 
 ## Relevance
 - [[Validation]] run 2026-11-03; [[Playground]].
+
+## Added 2026-11-04 (`stated`)
+- Gas wholesale 2024 (PDF p. 43): EEX "European Gas Spot Index" (EGSI) for market area THE, unweighted annual average **34.64 Euro/MWh** (−15% vs 2023); monthly average January 30.51, December 45.74 Euro/MWh. EGIX (front month) 2024 average 34.22 Euro/MWh, lowest March 23.20, highest December 49.08.
+- CHP ≥ 10 MW, 2024 (PDF p. 72, Tables 9-10): installed electrical CHP capacity 28.6 GW (gas 17.7 GW, hard coal 5.3 GW, lignite 1.3 GW, waste 1.1 GW, biomass 1.1 GW, other 2.2 GW); electrical CHP generation 53.1 TWh, useful heat 117.7 TWh; condensation power from CHP plants 97.8 TWh (lignite 69.6 TWh).
+- No CO2 or coal prices in the report (searched 2026-11-04).

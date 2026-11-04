@@ -54,6 +54,9 @@ Catalog of every note, grouped by folder. Read this before searching. PDFs: `lit
 - [[EnWG 13 13a Redispatch]] - The legal redispatch rule: least total cost, renewables priced with a uniform calculated price from a minimum factor (5-15), grid reserve after market plants, compensation under § 13a.
 - [[BNetzA 2020 Mindestfaktor-Festlegung]] - BNetzA ruling setting the renewables minimum factor to 10 and ordering annual calculated prices; regulator simulates redispatch as a cost-minimising OPF.
 - [[netztransparenz Kalkulatorische Preise]] - TSO calculated EE / grid-reserve prices and average conventional redispatch costs 2021-2027; price formula reconstructed.
+- [[BNetzA 2026 MiSpeL-Festlegung]] - Storage may mix grid and PV power without losing EEG support (from 2026-10); before, PV home batteries were self-consumption only.
+- [[DEHSt 2024 Auctioning Reports]] - German EUA auction prices 2024, monthly averages (Q4 avg 65.52 €/t).
+- [[DIW 2013 DD68 Schroeder et al]] - Open plant technology data: efficiencies, minimum load, up/down times.
 - [[Xiong et al 2025]] - Describes and validates the OpenStreetMap-based European high-voltage grid (>= 200 kV) that PyPSA-Eur uses as `base_network: osm`; it is NetzFix's network layer.
 
 ## Data sources (13)
