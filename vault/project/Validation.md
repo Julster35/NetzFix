@@ -189,3 +189,8 @@ Julien (2026-11-04): "can we work on the fix already".
 - **Unchanged:** A25, A26, A27 shapes, network, borders, target 24,565 GWh, grid, interpolation, T1-T5 and pass rules. Results `results/calibration_v6/`.
 - **Expectation (not a test):** T1 and the offshore share in T2 rise compared with v5.
 
+### 2026-11-04 - Calibration v5 (regional ERA5 weather): RESULTS
+- Runs: grid job **5776** (code `ccd6323`), alpha\* run via `srun` on the same code before v6 was synced; files `results/calibration_v5/`. Grid (GWh, unresolved): 0.70 → 86,348 (968); 0.75 → 69,771 (666); 0.80 → 56,899 (445); 0.85 → 45,897 (286); 0.90 → 36,062 (182); 0.95 → 27,774 (115); 1.00 → 21,325 (70). **alpha\* = 0.975**; run at 0.975: 24,267 GWh (up 12,134, conventional down 7,461, curtailment 4,672; unresolved 91). Selection cost 3,406 M€.
+- Tests: **T1** 4,672 fail; **T2** offshore / onshore / solar 6.6 / 77.0 / 16.4% fail; **T3** Q4 share 54.8% fail (Q1 6,737, Q2 1,013, Q3 3,211, Q4 13,306 GWh); **T4** gas 4,973, hard coal 3,544 pass; **T5** 38.5% fail. 1 of 5.
+- **Reading:** regional weather raised the volume at every margin (alpha\* up from 0.950 to 0.975: weather-driven flows are more concentrated) and moved T3 only slightly (56.4 → 54.8%). The pre-registered expectation (T3 towards 34%) did not hold. T2 unchanged, as expected under handicap (1), which v6 addresses.
+

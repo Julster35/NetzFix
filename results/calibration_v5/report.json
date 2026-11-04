@@ -1,0 +1,105 @@
+{
+ "target_gwh": 24565,
+ "grid": {
+  "0.7": {
+   "up_plus_down_gwh": 86347.91994480297,
+   "unresolved_gwh": 967.6535445114316
+  },
+  "0.75": {
+   "up_plus_down_gwh": 69770.96035321036,
+   "unresolved_gwh": 665.5875443650277
+  },
+  "0.8": {
+   "up_plus_down_gwh": 56899.46230460137,
+   "unresolved_gwh": 444.76155279091563
+  },
+  "0.85": {
+   "up_plus_down_gwh": 45896.898557667046,
+   "unresolved_gwh": 285.5403870727545
+  },
+  "0.9": {
+   "up_plus_down_gwh": 36061.73774624798,
+   "unresolved_gwh": 182.13960519663215
+  },
+  "0.95": {
+   "up_plus_down_gwh": 27774.24743667982,
+   "unresolved_gwh": 115.48158559722184
+  },
+  "0.975": {
+   "up_plus_down_gwh": 24267.404143408527,
+   "unresolved_gwh": 90.87642501096518
+  },
+  "1.0": {
+   "up_plus_down_gwh": 21324.592698499808,
+   "unresolved_gwh": 70.49355092049682
+  }
+ },
+ "alpha_star": 0.9728784633949678,
+ "tested_alpha": 0.975,
+ "tests": {
+  "T0_calibration_volume": {
+   "model": 24267.404143408527,
+   "real": 24565
+  },
+  "T1_curtailment_total": {
+   "model": 4672.376099869121,
+   "real": 9374,
+   "pass": false
+  },
+  "T2_curtailment_mix": {
+   "by_carrier": {
+    "wind_offshore": {
+     "model_share": 0.06580024445217353,
+     "real_share": 0.48869844670594537,
+     "pass": false
+    },
+    "wind_onshore": {
+     "model_share": 0.7697063836810984,
+     "real_share": 0.3625066952329941,
+     "pass": false
+    },
+    "solar": {
+     "model_share": 0.16449337186672797,
+     "real_share": 0.14879485806106052,
+     "pass": true
+    }
+   },
+   "pass": false
+  },
+  "T3_q4_share": {
+   "model": 0.5483156171489549,
+   "real": 0.34398099260823656,
+   "pass": false
+  },
+  "T4_up_top2": {
+   "model": [
+    [
+     "gas",
+     4972.812904443943
+    ],
+    [
+     "hard_coal",
+     3543.7303189601466
+    ],
+    [
+     "other_conventional",
+     2716.5610890333896
+    ],
+    [
+     "lignite",
+     900.5977592667814
+    ]
+   ],
+   "real": [
+    "gas",
+    "hard_coal"
+   ],
+   "pass": true
+  },
+  "T5_res_share_of_down": {
+   "model": 0.3850742396885679,
+   "real": 0.648540196485402,
+   "pass": false
+  }
+ }
+}
