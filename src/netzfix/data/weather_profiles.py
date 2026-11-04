@@ -58,6 +58,14 @@ def build(year: int = 2024) -> dict:
     for carrier in CARRIERS:
         cf, da = _cell_cf(cutout, carrier, w)
         times = pd.DatetimeIndex(da["time"].values).tz_localize("UTC")
+        # time alignment with SMARD (hour-start labels, hourly means), checked 2026-11-04 by lag
+        # correlation: solar (ERA5 radiation accumulated over the hour ending at the label) is
+        # moved one hour earlier (corr 0.925 -> 0.971); wind (instantaneous) is averaged over
+        # the hour's start and end (lags 0 / -1: 0.9636 / 0.9651 onshore)
+        if carrier == "solar":
+            times = times - pd.Timedelta(hours=1)
+        else:
+            cf = 0.5 * (cf + np.concatenate([cf[1:], cf[-1:]], axis=0))
         u = units[units["carrier"] == carrier]
         ix = np.abs(u["lon"].to_numpy()[:, None] - xs[None, :]).argmin(axis=1)
         iy = np.abs(u["lat"].to_numpy()[:, None] - ys[None, :]).argmin(axis=1)
@@ -81,11 +89,13 @@ def build(year: int = 2024) -> dict:
         cap_t = capm[:, month].T                                                  # T x bus
         nat_raw = (raw.to_numpy() * cap_t).sum(axis=1)
         target = smard[carrier].to_numpy(dtype="float64")
+        # SMARD reports a few MW of solar at night: below 0.1% of capacity counts as zero
+        target = np.where(target < 1e-3 * cap_t.sum(axis=1), 0.0, target)
         with np.errstate(divide="ignore", invalid="ignore"):
             k = np.where(nat_raw > 1.0, target / nat_raw, np.nan)
             nat_cf = target / cap_t.sum(axis=1)
         scaled = raw.to_numpy() * np.nan_to_num(k)[:, None]
-        fb = np.isnan(k) & (target > 1.0)
+        fb = np.isnan(k) & (target > 0.0)
         scaled[fb] = nat_cf[fb, None]
         scaled = np.clip(scaled, 0.0, 1.0)
         out = pd.DataFrame(scaled.astype("float32"), index=smard.index, columns=buses)
