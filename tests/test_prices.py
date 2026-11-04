@@ -14,12 +14,13 @@ def test_validation_prices_monthly_co2_and_flat_gas():
     p = price_table(IDX, "2024_validation")
     assert p["co2"].tolist() == [61.94, 66.66]          # DEHSt Jan / Dec 2024
     assert p["gas"].tolist() == [34.64, 34.64]          # EGSI annual average
-    assert p["hard_coal"].isna().all()                  # not held yet
+    assert p["hard_coal"].tolist() == [8.3, 8.3]        # implied from unit starts/stops
+    assert p["oil"].isna().all()                        # not held
 
 
 def test_missing_required_price_raises():
     with pytest.raises(MissingPrice):
-        price_table(IDX, "2024_validation", required=("hard_coal",))
+        price_table(IDX, "2024_validation", required=("oil",))
 
 
 def test_gas_cc_marginal_cost_hand_computed():

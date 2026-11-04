@@ -1,0 +1,22 @@
+{
+ "commit": "11ef0e7",
+ "units": 33,
+ "events": {
+  "start": 2250,
+  "stop": 2243
+ },
+ "p24_median_eur_mwh": 84.885,
+ "fuel_eur_mwh_th": {
+  "median_of_unit_medians": 8.259689750000003,
+  "q25": 5.82147020000001,
+  "q75": 10.60897305,
+  "median_all_events": 8.803687100000003
+ },
+ "assumptions": {
+  "eta": 0.39,
+  "ef_t_tj": 93.6,
+  "vom": 6.0,
+  "on_threshold": 0.3,
+  "window_h": 24
+ }
+}

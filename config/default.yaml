@@ -100,8 +100,10 @@ prices:
       # gas, EUR/MWh_th (Hs): EEX EGSI THE, unweighted 2024 average 34.64; only Jan 30.51 and
       # Dec 45.74 are given monthly (Monitoringbericht 2025, PDF p. 43) -> flat annual value
       gas_eur_mwh_th: 34.64
-      # hard coal, EUR/MWh_th: no held source yet (BAFA/Destatis series ended 2023). null = missing
-      hard_coal_eur_mwh_th: null
+      # hard coal, EUR/MWh_th: no held market quotation (BAFA/Destatis series ended 2023).
+      # Implied from 2024 unit start/stop prices (scripts/implied_coal_price.py ->
+      # results/inputs/implied_coal_price_2024.json): median of unit medians 8.3, IQR 5.8-10.6
+      hard_coal_eur_mwh_th: 8.3
       # lignite, EUR/MWh_th: DIW DD68 p. 90 (2010 value, 10 $/t); no market price exists
       lignite_eur_mwh_th: 2.9
       oil_eur_mwh_th: null
