@@ -31,9 +31,10 @@ from scipy.optimize import linprog
 
 PENALTY = 1e4          # min_volume rule (v0-v2, unchanged)
 # cost_based rule: line security is mandatory (§ 13 Abs. 1 EnWG), cost only chooses the measures.
-# The penalty must exceed the cost of relieving 1 MW through any plant: price (<= ~1e3 EUR/MWh)
-# / PTDF sensitivity (>= ~1e-3) ~ 1e6. With 1e4 the LP left overloads instead (v3 grid 5735).
-PENALTY_COST = 1e8
+# The penalty must exceed the cost of relieving 1 MW through any useful plant: renewable pair
+# ~800 EUR/MWh / PTDF sensitivity 1e-3 ~ 8e5. With 1e4 the LP left overloads instead (v3 grid
+# 5735); 1e8 made HiGHS fail numerically (grid 5742). 1e6 keeps the cost ratio near min_volume's.
+PENALTY_COST = 1e6
 
 
 @dataclass
