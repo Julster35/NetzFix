@@ -121,7 +121,12 @@ def simulate(
                 disp_pmax.append(cap_t[i])
                 disp_meta.append((int(i), carrier))
         else:
-            gen = cap_t * cf                                   # buses x T
+            reg = (ctx.regional_cf or {}).get(carrier)
+            if reg is not None:                                # A27: regional weather
+                r = reg.reindex(index=ctx.ts.index, columns=buses).to_numpy(dtype="float64").T
+                gen = cap_t * np.where(np.isnan(r), cf[None, :], r)
+            else:
+                gen = cap_t * cf                               # buses x T
             inj += gen.T
             res_bus += gen.T
             track(res_c, carrier, None, gen.T)

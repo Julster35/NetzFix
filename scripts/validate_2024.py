@@ -51,7 +51,7 @@ def main() -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     pg = Playground()
     n = pg.grid.network
-    ctx = Context(ts=pg.ts, capacity=pg.capacity)
+    ctx = Context(ts=pg.ts, capacity=pg.capacity, regional_cf=pg.regional_cf)
     r = pg.simulate(ctx)
     model = {
         "tso_circuit_km": float(_de_circuit_km(n)),

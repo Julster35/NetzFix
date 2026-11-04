@@ -35,6 +35,9 @@ class Context:
     capacity: dict[str, float | np.ndarray]
     seed: int = 0
     rng_streams: dict[str, np.random.Generator] = field(default_factory=dict)
+    # A27: per-bus capacity factors (index UTC hours, columns buses) replacing the national
+    # profile of plain profile assets of these carriers (engine, vectorised path)
+    regional_cf: dict[str, pd.DataFrame] | None = None
 
     @property
     def n(self) -> int:

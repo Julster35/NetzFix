@@ -18,6 +18,13 @@ weather:
   margin_deg: 0.25
   features: [wind, influx, temperature]   # what atlite needs for wind and PV capacity factors
   concurrent_requests: false
+  # A27 - conversion to capacity factors (atlite 0.7.0 built-in models; a model choice, then the
+  # national total is scaled to SMARD every hour, so only the regional shape comes from these)
+  wind_onshore_turbine: Vestas_V112_3MW
+  wind_offshore_turbine: Vestas_V164_7MW_offshore
+  solar_panel: CSi
+  solar_orientation: latitude_optimal
+  regional_profiles: true
 
 network:
   source: pypsa-eur-osm    # A4 - PyPSA-Eur base_network: osm (pinned release below)

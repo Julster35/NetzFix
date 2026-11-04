@@ -111,7 +111,12 @@ def behaviour(carrier: str) -> str:
     return json.dumps({"type": "national_profile", "carrier": carrier})
 
 
-def build() -> Path:
+MCOLS = [f"m{k:02d}" for k in range(1, 13)]
+
+
+def located_units() -> tuple[pd.DataFrame, pd.DataFrame, dict]:
+    """MaStR units operating in 2024 with carrier, MW, location, grid bus and month-end MW
+    (columns m01..m12). Returns (units, German buses, report)."""
     g = grid.load()
     buses = g.network.buses[g.network.buses.country == "DE"]  # not the NB-* neighbours
     u = pd.read_parquet(MASTR_FILE)
@@ -153,8 +158,13 @@ def build() -> Path:
     report["median_dist_km"] = round(float(u.dist_km.median()), 1)
 
     monthly = active * u.p.to_numpy()[:, None]                               # MW per month-end
-    mcols = [f"m{k:02d}" for k in range(1, 13)]
-    u[mcols] = monthly
+    u[MCOLS] = monthly
+    return u, buses, report
+
+
+def build() -> Path:
+    u, buses, report = located_units()
+    mcols = MCOLS
     report["capacity_mw_jan_dec_by_carrier"] = {
         c: [round(float(v), 1) for v in grp[["m01", "m12"]].sum()]
         for c, grp in u.groupby("carrier")}

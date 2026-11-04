@@ -24,7 +24,7 @@ def main() -> None:
     pg = Playground()
     n = pg.grid.network
     ts = pg.ts
-    ctx = Context(ts=ts, capacity=pg.capacity)
+    ctx = Context(ts=ts, capacity=pg.capacity, regional_cf=pg.regional_cf)
     r = pg.simulate(ctx)
     L = r.loading
     mx = L.max(axis=0)

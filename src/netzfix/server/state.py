@@ -81,12 +81,22 @@ class Playground:
                 self.capacity[c] = self.capacity.get(c, np.zeros(12)) + np.asarray(
                     a["p_nom_monthly"], float)
         self.replay_report = self._apply_entsoe_replay()
+        self.regional_cf = self._load_regional_cf()
         self.scenario = Scenario()
         # shares for the domestic gap: same as demand shares (A21b)
         share = {a["bus"]: a["behaviour"]["share"] for a in self.baseline.values()
                  if a["kind"] == "consumer" and a["behaviour"]["type"] == "demand_share"}
         self.gap_share = np.array([share.get(b, 0.0) for b in self.buses])
         self.gap_share = self.gap_share / self.gap_share.sum()
+
+    def _load_regional_cf(self) -> dict[str, pd.DataFrame] | None:
+        """A27: per-bus wind/solar capacity factors from ERA5 (scaled to SMARD hourly)."""
+        from netzfix.data import weather_profiles as wp
+
+        if not load_config()["weather"].get("regional_profiles"):
+            return None
+        out = {c: pd.read_parquet(wp.out_path(c)) for c in wp.CARRIERS if wp.out_path(c).exists()}
+        return out or None
 
     def _apply_entsoe_replay(self) -> dict | None:
         """A26: large thermal plants replay their actual 2024 output (ENTSO-E TR 16.1.A).
@@ -261,7 +271,7 @@ class Playground:
         st = self.scenario.settings
         bal = balancing or st.get("balancing", "keep_trade")
         sd = int(seed if seed is not None else st.get("seed", 0))
-        ctx = Context(ts=win, capacity=self.capacity, seed=sd)
+        ctx = Context(ts=win, capacity=self.capacity, seed=sd, regional_cf=self.regional_cf)
         r = self.simulate(ctx, balancing=bal)
         T = len(win)
         flow_before = r.flow

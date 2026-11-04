@@ -41,7 +41,7 @@ def main() -> None:
     rule = a.rule or rcfg["rule"]
     t0 = time.time()
     pg = Playground()
-    ctx = Context(ts=pg.ts, capacity=pg.capacity)
+    ctx = Context(ts=pg.ts, capacity=pg.capacity, regional_cf=pg.regional_cf)
     r = pg.simulate(ctx, track_carriers=True)
     costs = CostRule.from_config(pg.ts.index, rcfg["prices"]) if rule == "cost_based" else None
     rd = redispatch(r.flow, pg.ptdf, pg.s_nom, r.headroom_bus, r.disp_bus, r.res_bus,
