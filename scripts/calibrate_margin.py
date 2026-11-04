@@ -1,6 +1,8 @@
 """One calibration run: full year 2024 + redispatch at line margin `alpha` (limit = alpha * s_nom).
 
 Usage: uv run python scripts/calibrate_margin.py --alpha 0.85 [--out results/calibration]
+                                                  [--rule cost_based|min_volume]
+The rule defaults to `redispatch.rule` in config/default.yaml (A25).
 Writes <out>/alpha_<alpha>.json with total volumes, volumes by technology and by quarter.
 Pre-registration of target and tests: vault/project/Validation.md ("Calibration of the line
 margin", written before any calibration run).
@@ -16,10 +18,10 @@ from pathlib import Path
 
 import numpy as np
 
-from netzfix.config import RESULTS
+from netzfix.config import RESULTS, load_config
 from netzfix.server.state import Playground
 from netzfix.sim.behaviours import Context
-from netzfix.sim.redispatch import redispatch
+from netzfix.sim.redispatch import CostRule, redispatch
 
 
 def attribute(vol: np.ndarray, total: np.ndarray, parts: dict[str, np.ndarray]) -> dict:
@@ -33,17 +35,22 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--alpha", type=float, required=True)
     ap.add_argument("--out", default=str(RESULTS / "calibration"))
+    ap.add_argument("--rule", choices=("cost_based", "min_volume"), default=None)
     a = ap.parse_args()
+    rcfg = load_config()["redispatch"]
+    rule = a.rule or rcfg["rule"]
     t0 = time.time()
     pg = Playground()
     ctx = Context(ts=pg.ts, capacity=pg.capacity)
     r = pg.simulate(ctx, track_carriers=True)
+    costs = CostRule.from_config(pg.ts.index, rcfg["prices"]) if rule == "cost_based" else None
     rd = redispatch(r.flow, pg.ptdf, pg.s_nom, r.headroom_bus, r.disp_bus, r.res_bus,
-                    limit_pu=a.alpha)
+                    limit_pu=a.alpha, costs=costs)
     q = pg.ts.index.tz_convert("Europe/Berlin").quarter.to_numpy()
     tot = (rd.up + rd.down_disp + rd.down_res).sum(axis=1)
     out = {
         "alpha": a.alpha,
+        "rule": rule,
         "commit_at_run": subprocess.run(["git", "rev-parse", "--short", "HEAD"],
                                         capture_output=True, text=True).stdout.strip(),
         "seconds": round(time.time() - t0, 1),
@@ -51,6 +58,8 @@ def main() -> None:
                 "down_curtail": rd.down_res.sum() / 1e3, "up_plus_down": tot.sum() / 1e3},
         "unresolved_gwh": float(rd.unresolved.sum() / 1e3),
         "hours_unresolved": int((rd.unresolved > 0.5).sum()),
+        "selection_cost_meur": (float(rd.cost_eur.sum() / 1e6) if rd.cost_eur is not None
+                                else None),
         "quarter_gwh": {int(k): float(tot[q == k].sum() / 1e3) for k in (1, 2, 3, 4)},
         "curtail_by_carrier_gwh": attribute(rd.down_res, r.res_bus, r.res_by_carrier),
         "up_by_carrier_gwh": attribute(rd.up, r.headroom_bus, r.headroom_by_carrier),

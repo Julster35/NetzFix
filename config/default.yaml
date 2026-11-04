@@ -12,6 +12,13 @@ geography:
   # Neighbours are aggregated (one bus per country). LU is part of the DE-LU bidding zone (A3).
   neighbours: [AT, BE, CH, CZ, DK, FR, LU, NL, NO, PL, SE]
 
+weather:
+  # A24 - ERA5 cutout: box = DE land (NUTS3) + MaStR offshore wind units, padded by one ERA5 cell
+  module: era5
+  margin_deg: 0.25
+  features: [wind, influx, temperature]   # what atlite needs for wind and PV capacity factors
+  concurrent_requests: false
+
 network:
   source: pypsa-eur-osm    # A4 - PyPSA-Eur base_network: osm (pinned release below)
   pypsa_eur_release: v2026.09.0
@@ -31,3 +38,14 @@ markets:
 solver:
   name: highs              # gurobi via override (academic licence)
   options: {}
+
+redispatch:
+  # A25 - selection rule of § 13 Abs. 1 S. 2 / Abs. 1a EnWG (v3). min_volume = v0-v2 rule.
+  rule: cost_based
+  mindestfaktor_ee: 10      # BNetzA Mindestfaktor-Festlegung 2020-11-30, tenor 1
+  # TSO-published values, EUR/MWh, valid from 1 Oct (netztransparenz.de "Kalkulatorische Preise",
+  # saved 2026-11-04): average cost of conventional up / down (down < 0 = refund), calculated
+  # price for curtailing renewables (p_ee) and for grid reserve (p_nr, not used: no reserve units).
+  prices:
+    - {valid_from: 2023-10-01, c_up: 222.00, c_down: -142.23, p_ee: 575.70, p_nr: 476.50}
+    - {valid_from: 2024-10-01, c_up: 181.10, c_down: -130.40, p_ee: 325.8, p_nr: 476.9}
