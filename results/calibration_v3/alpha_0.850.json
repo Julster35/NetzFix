@@ -1,0 +1,41 @@
+{
+ "alpha": 0.85,
+ "rule": "cost_based",
+ "commit_at_run": "",
+ "seconds": 237.6,
+ "gwh": {
+  "up": 19482.331435904292,
+  "down_dispatchable": 11847.452839623738,
+  "down_curtail": 7634.878596280557,
+  "up_plus_down": 38964.662871808585
+ },
+ "unresolved_gwh": 290.07410533993635,
+ "hours_unresolved": 1602,
+ "selection_cost_meur": 5611.985588478241,
+ "quarter_gwh": {
+  "1": 10948.523926379614,
+  "2": 1833.2928975947816,
+  "3": 5440.449855477253,
+  "4": 20742.39619235694
+ },
+ "curtail_by_carrier_gwh": {
+  "biomass": 705.5003388645339,
+  "hydro": 302.3185646072193,
+  "other_renewable": 23.19159697997351,
+  "solar": 1402.7820529591008,
+  "wind_offshore": 501.40853976448705,
+  "wind_onshore": 4699.677503105243
+ },
+ "up_by_carrier_gwh": {
+  "gas": 8772.487448097405,
+  "hard_coal": 5299.493171273962,
+  "lignite": 1404.400248225791,
+  "other_conventional": 4005.9505683071375
+ },
+ "down_disp_by_carrier_gwh": {
+  "gas": 3370.5740802581226,
+  "hard_coal": 2395.303677397804,
+  "lignite": 5068.022354465332,
+  "other_conventional": 1013.5527275024779
+ }
+}

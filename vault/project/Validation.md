@@ -131,3 +131,22 @@ Julien (2026-11-04): "it is realy important that we build redispatch like it hap
 - **Rerun = v3 as pre-registered above, unchanged in every other respect** (grid, target, interpolation, T1-T5 pass rules). Both the buggy grid and the rerun are reported.
 - **Second fix (2026-11-04):** rerun grid **5742** (penalty 1e8) failed in every task: HiGHS numerical failure ("Status 0: Not Set"), no results. Penalty set to **1e6** €/MW (covers sensitivities down to ~1e-3 for renewable pairs). Smoke test on the laptop, alpha 0.85, full year (smoke test, not a result; only runtime and unresolved overload looked at): 383 s, unresolved 290 GWh in 1,602 h, equal to v2's min-volume run at 0.85 (290 GWh, 1,601 h) → remaining overload is infeasible for any rule, not left by the cost rule. Grid rerun follows, otherwise unchanged.
 
+### 2026-11-04 - Calibration v3 (legal cost-based redispatch rule): RESULTS
+- Runs: chair server, grid job **5749** (code `abf9c80`, server `CODE_COMMIT`), alpha\* run job **5756**; files `results/calibration_v3/alpha_*.json`, `report.json`; scripts `scripts/calibrate_margin.py` (`rule: cost_based`), `scripts/calibration_report.py --dir results/calibration_v3 --test 0.944`. 2-11 min per task.
+- Grid (GWh, unresolved in brackets): 0.70 → 73,403 (976); 0.75 → 58,764 (673); 0.80 → 47,771 (450); 0.85 → 38,965 (290); 0.90 → 30,729 (185); 0.95 → 23,656 (118); 1.00 → 18,162 (72). Volumes are above v2 at every alpha (as a cost rule must be) and unresolved overload equals v2. **alpha\* = 0.944**; run at 0.944: 24,438 GWh vs 24,565 (up 12,219; conventional down 7,355; curtailment 4,864; unresolved 124). Selection cost 3,490 M€ (descriptive; selection prices, not payments).
+
+| Test | v1 (min-vol, 0.942) | v2 (min-vol, 0.933) | **v3 (cost rule, 0.944)** | Real 2024 |
+|---|---|---|---|---|
+| T1 curtailment (GWh) | 8,195 pass | 7,864 pass | **4,864 fail** | 9,374 (pass 6,093-12,655) |
+| T2 offshore / onshore / solar | 15.6 / 68.2 / 16.2% fail | 6.8 / 75.0 / 18.2% fail | **6.8 / 73.5 / 19.7% fail** | 48.9 / 36.3 / 14.9% |
+| T3 Q4 share | 57.5% fail | 58.8% fail | **57.5% fail** (Q1 6,600, Q2 730, Q3 3,044, Q4 14,063 GWh) | 34.4% |
+| T4 top-2 upward | gas, hard coal pass | gas, hard coal pass | **gas 5,303, hard coal 3,630 pass** | gas 4,151, hard coal 3,792 |
+| T5 renewables share of down | 67.2% pass | 64.3% pass | **39.8% fail** | 64.9% |
+
+- Curtailment by carrier (GWh): onshore 3,122, solar 835, biomass 434, offshore 290, hydro 169. Conventional down: lignite 2,908, gas 2,207, hard coal 1,585, other 656.
+- **Reading (`high` for the numbers, `medium` for the causes):**
+  - The pre-registered expectation held only half: renewables curtailment fell (T1 now fails low), but the **offshore share did not rise** (6.8% under both rules). So **the selection rule is not the cause of the T2 failure** either. With the landing points (v2) and the rule (v3) both rejected, the offshore gap must sit in what the model offers the operator: in our grid offshore wind is almost never behind a binding constraint. Candidates, untested: congestion close to the coast that our OSM grid / line margin does not reproduce (export cables, 220 kV coastal grid, TenneT north), and the national offshore profile (A20).
+  - **T5 / T1 failing under the legal rule** says the model has **too much conventional output available for downward redispatch near the bottlenecks** (2.9 TWh lignite down). Likely cause `medium`: behaviour A20 runs every conventional plant at the national hourly capacity factor, so northern and eastern plants always produce something to reduce, while in reality many are off or must-run (CHP heat, system services; § 13 Abs. 3 "netztechnisch erforderliches Minimum"). The min-volume rule hid this because it ignored cost.
+  - T3 unchanged by the rule: structural, as before.
+- **Report against the tests:** v3 passes 1 of 5 (T4); v2 passed 3 of 5. The legal rule is the right rule to keep, but it exposes that the plant dispatch (A20) is the weakest layer for redispatch. **No change of model default until Julien decides** (see [[Next Steps]]): config `redispatch.rule` stays `cost_based`, the UI still uses the v2 margin and the min-volume rule.
+
