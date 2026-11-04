@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 from shapely import wkt as shp_wkt
 
-from netzfix.config import DATA_PROCESSED, REPO_ROOT
+from netzfix.config import DATA_PROCESSED, REPO_ROOT, load_config
 from netzfix.network import grid as gridmod
 from netzfix.sim.behaviours import Context, schema
 from netzfix.sim.engine import historical_import, simulate
@@ -80,12 +80,66 @@ class Playground:
                 c = a["carrier"]
                 self.capacity[c] = self.capacity.get(c, np.zeros(12)) + np.asarray(
                     a["p_nom_monthly"], float)
+        self.replay_report = self._apply_entsoe_replay()
         self.scenario = Scenario()
         # shares for the domestic gap: same as demand shares (A21b)
         share = {a["bus"]: a["behaviour"]["share"] for a in self.baseline.values()
                  if a["kind"] == "consumer" and a["behaviour"]["type"] == "demand_share"}
         self.gap_share = np.array([share.get(b, 0.0) for b in self.buses])
         self.gap_share = self.gap_share / self.gap_share.sum()
+
+    def _apply_entsoe_replay(self) -> dict | None:
+        """A26: large thermal plants replay their actual 2024 output (ENTSO-E TR 16.1.A).
+
+        Each linked production unit's output (sum of its generation units) is shared over its
+        MaStR assets by p_nom. Gaps of <= 3 h are interpolated, longer gaps are 0 (unit not
+        reporting / not running). The national profile of every affected carrier then only
+        covers the rest: `residual:<carrier>` = SMARD - replayed (clipped at 0), and the
+        carrier's capacity is reduced by the replayed assets' capacity.
+        """
+        from netzfix.data import entsoe_units as eu
+
+        cfg = load_config().get("entsoe_units", {})
+        if not cfg.get("replay") or not (eu.OUT.exists() and eu.LINKS.exists()):
+            return None
+        units = pd.read_parquet(eu.OUT)
+        units = units.interpolate(limit=3, limit_area="inside").fillna(0.0).clip(lower=0.0)
+        # SMARD's year is local time (starts 2023-12-31 23:00 UTC); that first hour is in
+        # ENTSO-E's 2023-12 file, not held: filled from the following hour (1 of 8,784 h)
+        units = units.reindex(self.ts.index).bfill(limit=1)
+        if units.isna().any().any():
+            raise ValueError("ENTSO-E unit series do not cover all SMARD hours")
+        links = pd.read_csv(eu.LINKS).dropna(subset=["assets"])
+        rep: dict[str, np.ndarray] = {}
+        rep_cap: dict[str, np.ndarray] = {}
+        n_assets = 0
+        for g, d in links.groupby("group"):
+            ids = [i for i in d["assets"].iloc[0].split(";") if i in self.baseline]
+            pn = np.array([float(self.baseline[i]["p_nom"] or 0.0) for i in ids])
+            if not ids or pn.sum() <= 0:
+                continue
+            x = units[d["code"].tolist()].sum(axis=1).to_numpy(dtype="float64")
+            self.ts[f"entsoe:{g}"] = x
+            for i, w in zip(ids, pn / pn.sum(), strict=True):
+                a = self.baseline[i]
+                a["behaviour"] = {"type": "replay_entsoe", "group": g, "share": float(w)}
+                c = a["carrier"]
+                rep[c] = rep.get(c, 0.0) + w * x
+                m = a["p_nom_monthly"] or [a["p_nom"]] * 12
+                rep_cap[c] = rep_cap.get(c, np.zeros(12)) + np.asarray(m, dtype="float64")
+                n_assets += 1
+        report: dict = {"groups": int(links["group"].nunique()), "assets": n_assets}
+        for c, x in rep.items():
+            if c in self.ts:
+                r = self.ts[c].to_numpy(dtype="float64") - x
+                report[c] = {"smard_twh": float(self.ts[c].sum() / 1e6),
+                             "replayed_twh": float(x.sum() / 1e6),
+                             "hours_negative_residual": int((r < 0).sum()),
+                             "negative_residual_twh": float(-r[r < 0].sum() / 1e6)}
+                self.ts[f"residual:{c}"] = np.clip(r, 0.0, None)
+            if c in self.capacity:
+                self.capacity[c] = np.clip(self.capacity[c] - rep_cap[c], 0.0, None)
+        return report
 
     # ------------------------------------------------------------------ assets
     def assets(self) -> list[dict]:

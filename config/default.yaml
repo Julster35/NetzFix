@@ -49,3 +49,28 @@ redispatch:
   prices:
     - {valid_from: 2023-10-01, c_up: 222.00, c_down: -142.23, p_ee: 575.70, p_nr: 476.50}
     - {valid_from: 2024-10-01, c_up: 181.10, c_down: -130.40, p_ee: 325.8, p_nr: 476.9}
+
+entsoe_units:
+  # A26 - replay of 2024 actual output per large thermal unit (ENTSO-E TR 16.1.A, File Library)
+  replay: true
+  name_min_score: 90         # fallback name match for units without an EIC link
+  max_site_km: 30            # drop linked MaStR units this far from the plant's median site
+  # A26b - conflict resolution only: control area of a MaStR unit from its federal state (NUTS-1).
+  # Used when powerplantmatching attaches one MaStR unit to plants in different control areas.
+  tso_by_nuts1:
+    DE1: DE_TransnetBW
+    DE2: DE_TenneT_GER
+    DE3: DE_50HzT
+    DE4: DE_50HzT
+    DE5: DE_TenneT_GER
+    DE6: DE_50HzT
+    DE7: DE_TenneT_GER
+    DE8: DE_50HzT
+    DE9: DE_TenneT_GER
+    DEA: DE_Amprion
+    DEB: DE_Amprion
+    DEC: DE_Amprion
+    DED: DE_50HzT
+    DEE: DE_50HzT
+    DEF: DE_TenneT_GER
+    DEG: DE_50HzT

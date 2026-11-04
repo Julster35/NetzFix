@@ -53,11 +53,15 @@ class Context:
         return np.full(self.n, float(v)) if v.ndim == 0 else v[self.month_idx]
 
     def capacity_factor(self, carrier: str) -> np.ndarray:
+        """National output / installed capacity. If units of this carrier replay their own
+        2024 output (A26), the column `residual:<carrier>` (SMARD minus replayed units) is used,
+        and `capacity` already holds the residual capacity."""
         if carrier not in self.ts or carrier not in self.capacity:
             raise KeyError(f"no national profile for carrier {carrier!r}")
+        col = f"residual:{carrier}" if f"residual:{carrier}" in self.ts else carrier
         cap = self.by_month(self.capacity[carrier])
         with np.errstate(divide="ignore", invalid="ignore"):
-            cf = np.where(cap > 0, self.ts[carrier].to_numpy(dtype="float64") / cap, 0.0)
+            cf = np.where(cap > 0, self.ts[col].to_numpy(dtype="float64") / cap, 0.0)
         return np.clip(cf, 0.0, 1.0)
 
     def rng(self, key: str) -> np.random.Generator:
@@ -87,6 +91,11 @@ def _demand_share(a: dict, b: dict, ctx: Context) -> np.ndarray:
 
 def _constant(a: dict, b: dict, ctx: Context) -> np.ndarray:
     return np.full(ctx.n, float(b["p_mw"]))
+
+
+def _replay_entsoe(a: dict, b: dict, ctx: Context) -> np.ndarray:
+    """Share of a plant's actual 2024 output (ENTSO-E TR 16.1.A, A26)."""
+    return float(b["share"]) * ctx.ts[f"entsoe:{b['group']}"].to_numpy(dtype="float64")
 
 
 def _replay_pumped_hydro(a: dict, b: dict, ctx: Context) -> np.ndarray:
@@ -122,6 +131,7 @@ BASE = {
     "demand_share": _demand_share,
     "constant": _constant,
     "replay_pumped_hydro": _replay_pumped_hydro,
+    "replay_entsoe": _replay_entsoe,
     "daily_arbitrage": _daily_arbitrage,
 }
 
@@ -190,6 +200,8 @@ def schema() -> dict:
             "demand_share": {"params": {"share": "fraction of national load"}},
             "constant": {"params": {"p_mw": "MW"}},
             "replay_pumped_hydro": {"params": {}, "note": "pro-rata share of 2024 pumped storage"},
+            "replay_entsoe": {"params": {"group": "ENTSO-E production unit", "share": "0-1"},
+                              "note": "actual 2024 output of the plant (ENTSO-E 16.1.A)"},
             "daily_arbitrage": {"params": {"energy_hours": "h", "efficiency": "0-1",
                                            "signal": "price_de_lu"},
                                 "note": "rule: charge cheapest / discharge dearest hours per day"},
