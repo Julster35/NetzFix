@@ -1,0 +1,101 @@
+{
+ "target_gwh": 24565,
+ "grid": {
+  "0.7": {
+   "up_plus_down_gwh": 75721.97145258806,
+   "unresolved_gwh": 975.702079714072
+  },
+  "0.75": {
+   "up_plus_down_gwh": 60765.608356772886,
+   "unresolved_gwh": 672.6373702449685
+  },
+  "0.8": {
+   "up_plus_down_gwh": 49532.72126562084,
+   "unresolved_gwh": 450.03646819022237
+  },
+  "0.85": {
+   "up_plus_down_gwh": 40480.243451736766,
+   "unresolved_gwh": 289.8791569976698
+  },
+  "0.9": {
+   "up_plus_down_gwh": 31981.549704140314,
+   "unresolved_gwh": 184.87057115049706
+  },
+  "0.95": {
+   "up_plus_down_gwh": 24597.9981751216,
+   "unresolved_gwh": 117.58569514234098
+  },
+  "1.0": {
+   "up_plus_down_gwh": 18868.524345734953,
+   "unresolved_gwh": 71.79705369370465
+  }
+ },
+ "alpha_star": 0.9502879686346793,
+ "tested_alpha": 0.95,
+ "tests": {
+  "T0_calibration_volume": {
+   "model": 24597.9981751216,
+   "real": 24565
+  },
+  "T1_curtailment_total": {
+   "model": 4730.73664928674,
+   "real": 9374,
+   "pass": false
+  },
+  "T2_curtailment_mix": {
+   "by_carrier": {
+    "wind_offshore": {
+     "model_share": 0.06827684087348804,
+     "real_share": 0.48869844670594537,
+     "pass": false
+    },
+    "wind_onshore": {
+     "model_share": 0.7374505957188928,
+     "real_share": 0.3625066952329941,
+     "pass": false
+    },
+    "solar": {
+     "model_share": 0.19427256340761917,
+     "real_share": 0.14879485806106052,
+     "pass": true
+    }
+   },
+   "pass": false
+  },
+  "T3_q4_share": {
+   "model": 0.5641283329844394,
+   "real": 0.34398099260823656,
+   "pass": false
+  },
+  "T4_up_top2": {
+   "model": [
+    [
+     "gas",
+     5122.911224088863
+    ],
+    [
+     "hard_coal",
+     3434.7682445656237
+    ],
+    [
+     "other_conventional",
+     2691.8126231134274
+    ],
+    [
+     "lignite",
+     1049.5069957928868
+    ]
+   ],
+   "real": [
+    "gas",
+    "hard_coal"
+   ],
+   "pass": true
+  },
+  "T5_res_share_of_down": {
+   "model": 0.3846440361209071,
+   "real": 0.648540196485402,
+   "pass": false
+  }
+ }
+}

@@ -158,3 +158,18 @@ Julien (2026-11-04): plants should behave as in real life; "yes go ahead" to rep
 - **Known handicaps stated in advance:** units that are off still offer their full p_nom as upward headroom (no start-up times or minimum up-time); must-run / CHP heat constraints of the small residual plants not modelled; renewables still national profiles (ERA5 not yet used), so T2/T3 handicaps are unchanged.
 - **Expectation (not a test):** conventional downward redispatch falls where plants were really off, so T5 (renewables share of down) and T1 rise compared with v3; T2 and T3 are not expected to change much.
 
+### 2026-11-04 - Calibration v4 (real thermal plant output + legal rule): RESULTS
+- Runs: chair server grid job **5758** (code `ac4e34d`), 2-12 min per task; files `results/calibration_v4/`. Grid (GWh, unresolved): 0.70 → 75,722 (976); 0.75 → 60,766 (673); 0.80 → 49,533 (450); 0.85 → 40,480 (290); 0.90 → 31,982 (185); 0.95 → 24,598 (118); 1.00 → 18,869 (72). **alpha\* = 0.950** (interpolation gives 0.9503, rounded to 3 decimals = grid point 0.950, so the grid run serves as the alpha\* run). 24,598 GWh vs 24,565: up 12,299, conventional down 7,568, curtailment 4,731. Selection cost 3,421 M€ (descriptive).
+
+| Test | v2 (min-vol) | v3 (cost rule) | **v4 (cost rule + real plants)** | Real 2024 |
+|---|---|---|---|---|
+| T1 curtailment (GWh) | 7,864 pass | 4,864 fail | **4,731 fail** | 9,374 |
+| T2 offshore / onshore / solar | 6.8 / 75.0 / 18.2% fail | 6.8 / 73.5 / 19.7% fail | **6.8 / 73.7 / 19.4% fail** | 48.9 / 36.3 / 14.9% |
+| T3 Q4 share | 58.8% fail | 57.5% fail | **56.4% fail** | 34.4% |
+| T4 top-2 upward | pass | pass | **gas 5,123, hard coal 3,435 pass** | gas 4,151, hard coal 3,792 |
+| T5 renewables share of down | 64.3% pass | 39.8% fail | **38.5% fail** | 64.9% |
+
+- Conventional down (GWh): lignite 2,914, gas 2,758, hard coal 1,196, other 700 (sum 7,568; real conventional down = 14,454 − 9,374 = 5,080).
+- **Reading:** the pre-registered expectation was **wrong**: real plant output barely changed T1/T5. So "plants that were really off" was not the main reason the cost rule under-curtails renewables. With real output, lignite (which really ran) is still reduced 2.9 TWh. Remaining candidates (`medium`, untested): (1) **uniform average costs**: the published average refund for conventional down (−142 €/MWh in 2024) is far above lignite's real saved cost, so the model finds lignite reductions cheap; real operators price each plant at its own cost (§ 13a Abs. 2) → unit-specific costs; (2) **technical minimum load / must-run** of lignite and CHP (§ 13 Abs. 3 "netztechnisch erforderliches Minimum"), so plants cannot go to 0; (3) regional weather (T2/T3 unchanged as expected).
+- v4 passes 1 of 5 (T4). Model default unchanged pending Julien.
+
