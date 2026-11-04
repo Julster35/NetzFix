@@ -82,12 +82,28 @@ class Playground:
                     a["p_nom_monthly"], float)
         self.replay_report = self._apply_entsoe_replay()
         self.regional_cf = self._load_regional_cf()
+        self.min_load_units = self._apply_min_load()
         self.scenario = Scenario()
         # shares for the domestic gap: same as demand shares (A21b)
         share = {a["bus"]: a["behaviour"]["share"] for a in self.baseline.values()
                  if a["kind"] == "consumer" and a["behaviour"]["type"] == "demand_share"}
         self.gap_share = np.array([share.get(b, 0.0) for b in self.buses])
         self.gap_share = self.gap_share / self.gap_share.sum()
+
+    def _apply_min_load(self) -> int:
+        """A31: attach minimum load (share of p_nom) to individual thermal units."""
+        from netzfix.markets import plants
+
+        if not load_config().get("unit_flex", {}).get("enabled") or not plants.OUT.exists():
+            return 0
+        t = pd.read_csv(plants.OUT)
+        n = 0
+        for r in t.itertuples():
+            a = self.baseline.get(r.id)
+            if a is not None and r.min_load > 0:
+                a["min_load"] = float(r.min_load)
+                n += 1
+        return n
 
     def _load_regional_cf(self) -> dict[str, pd.DataFrame] | None:
         """A27: per-bus wind/solar capacity factors from ERA5 (scaled to SMARD hourly)."""

@@ -55,6 +55,10 @@ class Result:
     res_by_carrier: dict | None = None
     headroom_by_carrier: dict | None = None
     disp_by_carrier: dict | None = None
+    # A31: MW that redispatch may take down (output above minimum load of running units);
+    # equals disp_bus when no asset has a min_load
+    down_bus: np.ndarray | None = None
+    down_by_carrier: dict | None = None
 
 
 def historical_import(ts: pd.DataFrame) -> np.ndarray:
@@ -87,6 +91,7 @@ def simulate(
     res_c: dict[str, np.ndarray] = {}
     head_c: dict[str, np.ndarray] = {}
     disp_c: dict[str, np.ndarray] = {}
+    down_c: dict[str, np.ndarray] = {}
 
     def track(store: dict, c: str, i, x) -> None:
         if track_carriers:
@@ -99,6 +104,7 @@ def simulate(
     carriers: dict[str, np.ndarray] = {}
     disp_rows: list[np.ndarray] = []
     disp_pmax: list[np.ndarray] = []
+    disp_pmin_frac: list[float] = []                 # A31 minimum load, share of pmax
     disp_meta: list[tuple[int, str]] = []   # (bus idx, carrier)
 
     def add_carrier(c: str, x: np.ndarray) -> None:
@@ -119,6 +125,7 @@ def simulate(
             for i in np.flatnonzero(cap_bm.any(axis=1)):
                 disp_rows.append(cap_t[i] * cf)
                 disp_pmax.append(cap_t[i])
+                disp_pmin_frac.append(0.0)
                 disp_meta.append((int(i), carrier))
         else:
             reg = (ctx.regional_cf or {}).get(carrier)
@@ -142,6 +149,7 @@ def simulate(
         if a["kind"] == "producer" and c in DISPATCHABLE:
             disp_rows.append(x)
             disp_pmax.append(np.full(T, float(a.get("p_nom") or x.max(initial=0.0))))
+            disp_pmin_frac.append(float(a.get("min_load") or 0.0))
             disp_meta.append((i, c))
         elif a["kind"] == "consumer":
             inj[:, i] -= x
@@ -180,6 +188,7 @@ def simulate(
             elif d < 0 and (room := disp[:, t].sum()) > 0:
                 disp[:, t] -= disp[:, t] * min(1.0, -d / room)
     disp_bus = np.zeros((T, nb))
+    down_bus = np.zeros((T, nb))
     headroom_bus = np.zeros((T, nb))
     for k, (i, c) in enumerate(disp_meta):
         inj[:, i] += disp[k]
@@ -187,6 +196,12 @@ def simulate(
         headroom_bus[:, i] += np.clip(pmax[k] - disp[k], 0, None)
         track(head_c, c, i, np.clip(pmax[k] - disp[k], 0, None))
         track(disp_c, c, i, disp[k])
+        # A31: a running unit can be taken down to its minimum load; below it (or off) it
+        # offers no downward room in that hour
+        pmin = disp_pmin_frac[k] * pmax[k]
+        room = np.where(disp[k] >= pmin, disp[k] - pmin, 0.0) if disp_pmin_frac[k] else disp[k]
+        down_bus[:, i] += room
+        track(down_c, c, i, room)
         add_carrier(c, disp[k])
 
     border_total = -inj.sum(axis=1)                            # + = import
@@ -220,4 +235,5 @@ def simulate(
         res_bus=res_bus, disp_bus=disp_bus, headroom_bus=headroom_bus,
         res_by_carrier=res_c or None, headroom_by_carrier=head_c or None,
         disp_by_carrier=disp_c or None,
+        down_bus=down_bus, down_by_carrier=down_c or None,
     )

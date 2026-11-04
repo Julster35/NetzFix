@@ -121,3 +121,19 @@ plant_costs:
     gas_st:             {fuel: gas,       eta: 0.412, vom: 3.0, ef_t_tj: 55.8}
     oil:                {fuel: oil,       eta: 0.392, vom: 3.0, ef_t_tj: 79.7}    # oil CT; heavy fuel oil EF
 
+unit_flex:
+  # A31 - minimum stable load (share of p_nom) of individual thermal units (MaStR units >= 10 MW).
+  # Values: VDE (2012) row of DIW DD68 Table 27 (PDF p. 76), midpoints of the given ranges.
+  # "new" = commissioned in or after `new_from_year`. Units running below their minimum load in a
+  # replayed hour are treated as off. Redispatch may lower a running unit only to its minimum
+  # load (no shut-down by redispatch within the hour); off units can be started up to p_nom.
+  enabled: true
+  min_load:
+    lignite_old: 0.55        # VDE 2012: 50-60
+    lignite_new: 0.40        # VDE 2012: 40
+    hard_coal_old: 0.325     # VDE 2012: 25-40
+    hard_coal_new: 0.20      # VDE 2012: 20
+    gas_cc: 0.40             # VDE 2012: 30-50
+    gas_gt: 0.35             # VDE 2012: 20-50
+  new_from_year: {lignite: 2000, hard_coal: 2010}
+

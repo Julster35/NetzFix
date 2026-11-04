@@ -44,7 +44,8 @@ def main() -> None:
     ctx = Context(ts=pg.ts, capacity=pg.capacity, regional_cf=pg.regional_cf)
     r = pg.simulate(ctx, track_carriers=True)
     costs = CostRule.from_config(pg.ts.index, rcfg["prices"]) if rule == "cost_based" else None
-    rd = redispatch(r.flow, pg.ptdf, pg.s_nom, r.headroom_bus, r.disp_bus, r.res_bus,
+    down = r.down_bus if r.down_bus is not None else r.disp_bus     # A31 minimum load
+    rd = redispatch(r.flow, pg.ptdf, pg.s_nom, r.headroom_bus, down, r.res_bus,
                     limit_pu=a.alpha, costs=costs)
     q = pg.ts.index.tz_convert("Europe/Berlin").quarter.to_numpy()
     tot = (rd.up + rd.down_disp + rd.down_res).sum(axis=1)
@@ -63,7 +64,9 @@ def main() -> None:
         "quarter_gwh": {int(k): float(tot[q == k].sum() / 1e3) for k in (1, 2, 3, 4)},
         "curtail_by_carrier_gwh": attribute(rd.down_res, r.res_bus, r.res_by_carrier),
         "up_by_carrier_gwh": attribute(rd.up, r.headroom_bus, r.headroom_by_carrier),
-        "down_disp_by_carrier_gwh": attribute(rd.down_disp, r.disp_bus, r.disp_by_carrier),
+        "down_disp_by_carrier_gwh": attribute(rd.down_disp, down,
+                                              r.down_by_carrier or r.disp_by_carrier),
+        "min_load_units": pg.min_load_units,
     }
     d = Path(a.out)
     d.mkdir(parents=True, exist_ok=True)
