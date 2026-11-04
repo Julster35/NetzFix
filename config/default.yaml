@@ -85,3 +85,39 @@ entsoe_units:
     DEE: DE_50HzT
     DEF: DE_TenneT_GER
     DEG: DE_50HzT
+
+prices:
+  # A29 - price layer. `set` chooses the input prices for plant costs:
+  #   2024_validation: frozen, from held sources (calibration and the A/B/C comparison of the bet)
+  #   latest:          newest values fetched automatically where a free source exists (twin / UI)
+  #   user:            hand-set scenario values (labelled as scenario, not data)
+  set: 2024_validation
+  sets:
+    2024_validation:
+      # EUA, EUR/t: German auction monthly volume-weighted averages Jan..Dec 2024
+      # (DEHSt quarterly reports Q1-Q4 2024, monthly tables; [[DEHSt 2024 Auctioning Reports]])
+      co2_eur_t: [61.94, 55.70, 56.60, 64.65, 71.98, 67.67, 66.70, 70.40, 65.13, 63.24, 66.89, 66.66]
+      # gas, EUR/MWh_th (Hs): EEX EGSI THE, unweighted 2024 average 34.64; only Jan 30.51 and
+      # Dec 45.74 are given monthly (Monitoringbericht 2025, PDF p. 43) -> flat annual value
+      gas_eur_mwh_th: 34.64
+      # hard coal, EUR/MWh_th: no held source yet (BAFA/Destatis series ended 2023). null = missing
+      hard_coal_eur_mwh_th: null
+      # lignite, EUR/MWh_th: DIW DD68 p. 90 (2010 value, 10 $/t); no market price exists
+      lignite_eur_mwh_th: 2.9
+      oil_eur_mwh_th: null
+    user: {}
+
+plant_costs:
+  # A30 - technology parameters for marginal cost = fuel/eta + CO2 * EF/eta + VOM
+  # efficiency eta: DIW DD68 Table 35 (2020 column, PDF p. 89); VOM EUR/MWh_el: DD68 Table 34
+  # (2010 EUR, PDF p. 88); emission factor t CO2/TJ: UBA Climate Change 29/2022 Table 23
+  # (2020 column, PDF pp. 52-53)
+  technologies:
+    lignite:            {fuel: lignite,   eta: 0.439, vom: 7.0, ef_t_tj: 110.2}   # BoA; EF Lausitz (Rhineland 113.3, Central 103.6)
+    hard_coal_sub:      {fuel: hard_coal, eta: 0.390, vom: 6.0, ef_t_tj: 93.6}
+    hard_coal_super:    {fuel: hard_coal, eta: 0.462, vom: 6.0, ef_t_tj: 93.6}
+    gas_cc:             {fuel: gas,       eta: 0.605, vom: 4.0, ef_t_tj: 55.8}
+    gas_gt:             {fuel: gas,       eta: 0.392, vom: 3.0, ef_t_tj: 55.8}
+    gas_st:             {fuel: gas,       eta: 0.412, vom: 3.0, ef_t_tj: 55.8}
+    oil:                {fuel: oil,       eta: 0.392, vom: 3.0, ef_t_tj: 79.7}    # oil CT; heavy fuel oil EF
+

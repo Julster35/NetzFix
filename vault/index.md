@@ -57,6 +57,7 @@ Catalog of every note, grouped by folder. Read this before searching. PDFs: `lit
 - [[BNetzA 2026 MiSpeL-Festlegung]] - Storage may mix grid and PV power without losing EEG support (from 2026-10); before, PV home batteries were self-consumption only.
 - [[DEHSt 2024 Auctioning Reports]] - German EUA auction prices 2024, monthly averages (Q4 avg 65.52 €/t).
 - [[DIW 2013 DD68 Schroeder et al]] - Open plant technology data: efficiencies, minimum load, up/down times.
+- [[UBA 2022 CO2 Emission Factors]] - Official German CO2 emission factors per fuel (t CO2/TJ), e.g. gas 55.8, hard coal 93.6, lignite 103.6-113.3.
 - [[Xiong et al 2025]] - Describes and validates the OpenStreetMap-based European high-voltage grid (>= 200 kV) that PyPSA-Eur uses as `base_network: osm`; it is NetzFix's network layer.
 
 ## Data sources (13)
