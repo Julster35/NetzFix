@@ -29,7 +29,11 @@ from dataclasses import dataclass
 import numpy as np
 from scipy.optimize import linprog
 
-PENALTY = 1e4
+PENALTY = 1e4          # min_volume rule (v0-v2, unchanged)
+# cost_based rule: line security is mandatory (§ 13 Abs. 1 EnWG), cost only chooses the measures.
+# The penalty must exceed the cost of relieving 1 MW through any plant: price (<= ~1e3 EUR/MWh)
+# / PTDF sensitivity (>= ~1e-3) ~ 1e6. With 1e4 the LP left overloads instead (v3 grid 5735).
+PENALTY_COST = 1e8
 
 
 @dataclass
@@ -73,7 +77,8 @@ class Redispatch:
         return {"up": up, "down_dispatchable": dd, "down_curtail": dr, "up_plus_down": up + dd + dr}
 
 
-def _solve_hour(f0, P, L, up_cap, dd_cap, dr_cap, w_up, w_dc, w_dr, max_iter=25):
+def _solve_hour(f0, P, L, up_cap, dd_cap, dr_cap, w_up, w_dc, w_dr, penalty=PENALTY,
+                max_iter=25):
     nb = len(up_cap)
     k_set: list[int] = list(np.flatnonzero(np.abs(f0) > L + 1e-6))
     x = np.zeros(3 * nb)
@@ -85,7 +90,7 @@ def _solve_hour(f0, P, L, up_cap, dd_cap, dr_cap, w_up, w_dc, w_dr, max_iter=25)
         nk = len(K)
         # variables: up(nb) dc(nb) dr(nb) s_plus(nk) s_minus(nk)
         c = np.r_[np.full(nb, w_up), np.full(nb, w_dc), np.full(nb, w_dr),
-                  np.full(2 * nk, PENALTY)]
+                  np.full(2 * nk, penalty)]
         Pk = P[K]
         A_flow = np.hstack([Pk, -Pk, -Pk])
         A_ub = np.vstack([
@@ -129,7 +134,8 @@ def redispatch(flow0: np.ndarray, ptdf: np.ndarray, s_nom: np.ndarray, headroom:
         w = ((1.0, 1.0, res_weight) if costs is None
              else (costs.c_up[t], costs.c_down[t], costs.p_ee[t]))
         x, s = _solve_hour(flow0[t], ptdf, L, np.clip(headroom[t], 0, None),
-                           np.clip(disp[t], 0, None), np.clip(res[t], 0, None), *w)
+                           np.clip(disp[t], 0, None), np.clip(res[t], 0, None), *w,
+                           penalty=PENALTY if costs is None else PENALTY_COST)
         up[t], dd[t], dr[t] = x[:nb], x[nb:2 * nb], x[2 * nb:]
         if cost is not None:
             cost[t] = w[0] * up[t].sum() + w[1] * dd[t].sum() + w[2] * dr[t].sum()

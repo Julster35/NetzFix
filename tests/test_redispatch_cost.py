@@ -21,13 +21,13 @@ from netzfix.sim.redispatch import CostRule, redispatch
 PRICES = dict(c_up=222.00, c_down=-142.23, p_ee=575.70)
 
 
-def _toy(s_c: float, costs: CostRule | None):
-    ptdf = np.array([[1.0, s_c, 0.0, 0.0]])
+def _toy(s_c: float, costs: CostRule | None, s_r: float = 1.0, cap: float = 500.0):
+    ptdf = np.array([[s_r, s_c, 0.0, 0.0]])
     flow0 = np.array([[110.0]])
     s_nom = np.array([100.0])
-    headroom = np.array([[0.0, 0.0, 500.0, 0.0]])
-    disp = np.array([[0.0, 500.0, 0.0, 0.0]])
-    res = np.array([[300.0, 0.0, 0.0, 0.0]])
+    headroom = np.array([[0.0, 0.0, cap, 0.0]])
+    disp = np.array([[0.0, cap, 0.0, 0.0]])
+    res = np.array([[cap, 0.0, 0.0, 0.0]])
     return redispatch(flow0, ptdf, s_nom, headroom, disp, res, limit_pu=1.0, costs=costs)
 
 
@@ -71,3 +71,16 @@ def test_config_prices_follow_the_minimum_factor_formula():
     mf = cfg["mindestfaktor_ee"]
     for r in cfg["prices"]:   # p_ee = MF * (c_up + c_down) - c_up, published to 0.1 EUR/MWh
         assert r["p_ee"] == pytest.approx(mf * (r["c_up"] + r["c_down"]) - r["c_up"], abs=0.15)
+
+
+def test_cost_rule_resolves_overload_even_when_relief_is_expensive():
+    """Weak sensitivities: relieving 1 MW costs more than 1e4 EUR, but security is mandatory.
+    RE at PTDF 0.04: 250 MW pair -> 250 * 797.70 = 199,425; conventional at PTDF 0.005:
+    2,000 MW pair -> 2,000 * 79.77 = 159,540 (15,954 EUR per MW of overload, above the old
+    1e4 penalty) -> conventional, overload fully removed."""
+    r = _toy(0.005, _rule(), s_r=0.04, cap=3_000.0)
+    assert r.unresolved[0] == pytest.approx(0.0, abs=1e-6)
+    assert r.flow[0, 0] == pytest.approx(100.0, abs=1e-4)
+    assert r.down_disp[0, 1] == pytest.approx(2_000.0, abs=1e-3)
+    assert r.down_res.sum() == pytest.approx(0.0, abs=1e-6)
+    assert r.cost_eur[0] == pytest.approx(159_540.0, abs=0.5)
