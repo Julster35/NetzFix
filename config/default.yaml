@@ -139,3 +139,11 @@ unit_flex:
     gas_gt: 0.35             # VDE 2012: 20-50
   new_from_year: {lignite: 2000, hard_coal: 2010}
 
+grid_reserve:
+  # A32 - units outside the market (§ 13d/§ 13e EnWG, § 11 Abs. 3): no market output; available
+  # only for upward redispatch at the calculated grid-reserve price p_nr (redispatch.prices).
+  # Status from the BNetzA Kraftwerksliste (held, Datenstand 2026-06-26; 2024 status assumed equal).
+  enabled: true
+  statuses: ["Netzreserve aufgrund § 13b EnWG", "Netzreserve aufgrund von KVBG",
+             "Kapazitätsreserve aufgrund von § 13e EnWG", "besonderes netztechnisches Betriebsmittel"]
+

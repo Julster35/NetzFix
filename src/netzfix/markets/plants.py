@@ -17,6 +17,7 @@ import pandas as pd
 from netzfix.config import DATA_PROCESSED, load_config
 
 OUT = DATA_PROCESSED / "unit_technology_2024.csv"
+RESERVE_OUT = DATA_PROCESSED / "grid_reserve_units.csv"
 GT = ("Gasturbinen mit Abhitzekessel", "Gasturbinen ohne Abhitzekessel", "Verbrennungsmotor")
 
 
@@ -61,7 +62,27 @@ def build(cfg: dict | None = None) -> pd.DataFrame:
     return out
 
 
+def build_reserve(cfg: dict | None = None) -> pd.DataFrame:
+    """A32: MaStR units whose BNetzA Kraftwerksliste status is a reserve / grid-security status."""
+    from netzfix.config import DATA_RAW
+
+    cfg = cfg or load_config()
+    k = pd.read_csv(DATA_RAW / "bnetza" / "Kraftwerksliste_CSV.csv", sep=";", encoding="cp1252",
+                    skiprows=9, dtype=str)
+    st = set(cfg["grid_reserve"]["statuses"])
+    r = k[k["Kraftwerksstatus"].isin(st)].copy()
+    if r.empty:
+        raise ValueError("no reserve statuses matched - check the status strings in config")
+    r["mw"] = r["Nettonennleistung_MW"].str.replace(",", ".").astype(float)
+    out = pd.DataFrame({"id": "mastr/" + r["EinheitMastrNummer"], "status": r["Kraftwerksstatus"],
+                        "mw": r["mw"], "name": r["Anzeigename"]})
+    out.to_csv(RESERVE_OUT, index=False, encoding="utf-8")
+    return out
+
+
 if __name__ == "__main__":
+    rv = build_reserve()
+    print("reserve units", len(rv), "MW", round(rv.mw.sum()))
     o = build()
     print(o.groupby(["carrier", "technology"]).agg(n=("id", "size"),
                                                    min_load=("min_load", "mean")).round(3))

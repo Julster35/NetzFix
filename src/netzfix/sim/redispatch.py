@@ -16,10 +16,11 @@ Rules (objective; + penalty * unresolved overload in both):
   encodes the minimum factor. Sources: vault/literature "EnWG 13 13a Redispatch",
   "BNetzA 2020 Mindestfaktor-Festlegung", "netztransparenz Kalkulatorische Preise".
 
-Not modelled (documented in vault Validation): grid switching (comes first in law), grid-reserve
-plants (§ 13 Abs. 1c; no reserve units in the asset list), countertrading, the < 100 kW
-last-resort rule (§ 13 Abs. 1 S. 3), unit-specific conventional costs (uniform published averages
-are used), n-1 security analysis.
+Grid-reserve units (A32, optional `reserve` headroom): an extra upward block priced at the
+calculated grid-reserve price p_nr (§ 13 Abs. 1c), so they are used after market plants.
+Not modelled (documented in vault Validation): grid switching (comes first in law),
+countertrading, the < 100 kW last-resort rule (§ 13 Abs. 1 S. 3), unit-specific conventional
+costs (uniform published averages are used), n-1 security analysis.
 """
 
 from __future__ import annotations
@@ -43,6 +44,7 @@ class CostRule:
     c_up: np.ndarray      # conventional up (cost)
     c_down: np.ndarray    # conventional down (negative = refund of saved cost)
     p_ee: np.ndarray      # calculated price for curtailing renewables
+    p_nr: np.ndarray | None = None   # calculated price for grid-reserve units (§ 13 Abs. 1c)
 
     @classmethod
     def from_config(cls, index, periods: list[dict]) -> CostRule:
@@ -59,7 +61,7 @@ class CostRule:
         if (k < 0).any():
             raise ValueError("snapshots before the first redispatch price period")
         pick = lambda key: np.array([float(rows[i][key]) for i in k])  # noqa: E731
-        return cls(pick("c_up"), pick("c_down"), pick("p_ee"))
+        return cls(pick("c_up"), pick("c_down"), pick("p_ee"), pick("p_nr"))
 
 
 @dataclass
@@ -72,43 +74,45 @@ class Redispatch:
     limit_pu: float
 
     cost_eur: np.ndarray | None = None   # T, selection cost (cost_based rule only)
+    up_reserve: np.ndarray | None = None  # T x buses, MW from grid-reserve units (A32)
 
     def volume_twh(self) -> dict[str, float]:
         up, dd, dr = self.up.sum() / 1e6, self.down_disp.sum() / 1e6, self.down_res.sum() / 1e6
         return {"up": up, "down_dispatchable": dd, "down_curtail": dr, "up_plus_down": up + dd + dr}
 
 
-def _solve_hour(f0, P, L, up_cap, dd_cap, dr_cap, w_up, w_dc, w_dr, penalty=PENALTY,
-                max_iter=25):
-    nb = len(up_cap)
+def _solve_hour(f0, P, L, caps, weights, signs, penalty=PENALTY, max_iter=25):
+    """One hour. Blocks b (each nb variables): cap[b] bounds, weight[b] cost, sign[b] +1 for
+    injection increase (up, reserve up), -1 for decrease (conventional down, curtailment).
+    Balance: sum over blocks of sign * x = 0."""
+    nb = len(caps[0])
+    nbl = len(caps)
     k_set: list[int] = list(np.flatnonzero(np.abs(f0) > L + 1e-6))
-    x = np.zeros(3 * nb)
+    x = np.zeros(nbl * nb)
     slack_total = 0.0
     for _ in range(max_iter):
         if not k_set:
             return x, 0.0
         K = np.array(k_set)
         nk = len(K)
-        # variables: up(nb) dc(nb) dr(nb) s_plus(nk) s_minus(nk)
-        c = np.r_[np.full(nb, w_up), np.full(nb, w_dc), np.full(nb, w_dr),
-                  np.full(2 * nk, penalty)]
+        c = np.r_[np.concatenate([np.full(nb, w) for w in weights]), np.full(2 * nk, penalty)]
         Pk = P[K]
-        A_flow = np.hstack([Pk, -Pk, -Pk])
+        A_flow = np.hstack([sg * Pk for sg in signs])
         A_ub = np.vstack([
             np.hstack([A_flow, -np.eye(nk), np.zeros((nk, nk))]),
             np.hstack([-A_flow, np.zeros((nk, nk)), -np.eye(nk)]),
         ])
         b_ub = np.r_[L[K] - f0[K], L[K] + f0[K]]
-        A_eq = np.r_[np.ones(nb), -np.ones(nb), -np.ones(nb), np.zeros(2 * nk)][None, :]
-        bounds = ([(0, u) for u in up_cap] + [(0, d) for d in dd_cap]
-                  + [(0, r) for r in dr_cap] + [(0, None)] * (2 * nk))
+        A_eq = np.r_[np.concatenate([np.full(nb, float(sg)) for sg in signs]),
+                     np.zeros(2 * nk)][None, :]
+        bounds = [(0, v) for cap in caps for v in cap] + [(0, None)] * (2 * nk)
         res = linprog(c, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq, b_eq=[0.0], bounds=bounds,
                       method="highs")
         if res.status != 0:
             raise RuntimeError(f"redispatch LP failed: {res.message}")
-        x = res.x[: 3 * nb]
-        slack_total = float(res.x[3 * nb:].sum())
-        delta = x[:nb] - x[nb:2 * nb] - x[2 * nb:]
+        x = res.x[: nbl * nb]
+        slack_total = float(res.x[nbl * nb:].sum())
+        delta = sum(sg * x[b * nb:(b + 1) * nb] for b, sg in enumerate(signs))
         f = f0 + P @ delta
         new = [k for k in np.flatnonzero(np.abs(f) > L + 1e-3) if k not in set(k_set)]
         if not new:
@@ -119,7 +123,8 @@ def _solve_hour(f0, P, L, up_cap, dd_cap, dr_cap, w_up, w_dc, w_dr, penalty=PENA
 
 def redispatch(flow0: np.ndarray, ptdf: np.ndarray, s_nom: np.ndarray, headroom: np.ndarray,
                disp: np.ndarray, res: np.ndarray, limit_pu: float = 1.0,
-               res_weight: float = 1.0, costs: CostRule | None = None) -> Redispatch:
+               res_weight: float = 1.0, costs: CostRule | None = None,
+               reserve: np.ndarray | None = None) -> Redispatch:
     """`costs=None`: min_volume rule; otherwise the cost_based rule with these prices."""
     T, nb = headroom.shape
     if costs is not None and (costs.c_up + costs.c_down <= 0).any():
@@ -127,6 +132,9 @@ def redispatch(flow0: np.ndarray, ptdf: np.ndarray, s_nom: np.ndarray, headroom:
     cost = np.zeros(T) if costs is not None else None
     L = limit_pu * s_nom
     up, dd, dr = np.zeros((T, nb)), np.zeros((T, nb)), np.zeros((T, nb))
+    ur = np.zeros((T, nb))
+    if reserve is not None and costs is not None and costs.p_nr is None:
+        raise ValueError("grid-reserve units given but no reserve price (p_nr)")
     unresolved = np.zeros(T)
     flow = flow0.copy()
     for t in range(T):
@@ -134,12 +142,21 @@ def redispatch(flow0: np.ndarray, ptdf: np.ndarray, s_nom: np.ndarray, headroom:
             continue
         w = ((1.0, 1.0, res_weight) if costs is None
              else (costs.c_up[t], costs.c_down[t], costs.p_ee[t]))
-        x, s = _solve_hour(flow0[t], ptdf, L, np.clip(headroom[t], 0, None),
-                           np.clip(disp[t], 0, None), np.clip(res[t], 0, None), *w,
+        caps = [np.clip(headroom[t], 0, None), np.clip(disp[t], 0, None),
+                np.clip(res[t], 0, None)]
+        signs = [1, -1, -1]
+        if reserve is not None:          # A32: grid reserve, after market plants (§ 13 Abs. 1c)
+            caps.append(np.clip(reserve[t], 0, None))
+            w = (*w, 1.0 if costs is None else costs.p_nr[t])
+            signs.append(1)
+        x, s = _solve_hour(flow0[t], ptdf, L, caps, list(w), signs,
                            penalty=PENALTY if costs is None else PENALTY_COST)
-        up[t], dd[t], dr[t] = x[:nb], x[nb:2 * nb], x[2 * nb:]
+        up[t], dd[t], dr[t] = x[:nb], x[nb:2 * nb], x[2 * nb:3 * nb]
+        if reserve is not None:
+            ur[t] = x[3 * nb:4 * nb]
         if cost is not None:
-            cost[t] = w[0] * up[t].sum() + w[1] * dd[t].sum() + w[2] * dr[t].sum()
-        flow[t] = flow0[t] + ptdf @ (up[t] - dd[t] - dr[t])
+            cost[t] = sum(w[b] * x[b * nb:(b + 1) * nb].sum() for b in range(len(caps)))
+        flow[t] = flow0[t] + ptdf @ (up[t] + ur[t] - dd[t] - dr[t])
         unresolved[t] = s
-    return Redispatch(up, dd, dr, flow, unresolved, limit_pu, cost)
+    return Redispatch(up, dd, dr, flow, unresolved, limit_pu, cost,
+                      ur if reserve is not None else None)

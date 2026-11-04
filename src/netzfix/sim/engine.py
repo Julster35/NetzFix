@@ -59,6 +59,8 @@ class Result:
     # equals disp_bus when no asset has a min_load
     down_bus: np.ndarray | None = None
     down_by_carrier: dict | None = None
+    # A32: MW of grid-reserve units available for upward redispatch (no market output)
+    reserve_bus: np.ndarray | None = None
 
 
 def historical_import(ts: pd.DataFrame) -> np.ndarray:
@@ -111,7 +113,8 @@ def simulate(
         carriers[c] = carriers.get(c, 0) + x
 
     # 1) vectorised plain national profiles: (bus x month capacity) x capacity factors
-    plain = [a for a in assets if a["kind"] == "producer" and is_plain_profile(a)]
+    plain = [a for a in assets if a["kind"] == "producer" and is_plain_profile(a)
+             and not a.get("reserve")]
     for carrier in sorted({_carrier_of(a) for a in plain}):
         cf = ctx.capacity_factor(carrier)
         cap_bm = np.zeros((nb, 12))
@@ -140,7 +143,11 @@ def simulate(
             add_carrier(carrier, gen.sum(axis=0))
 
     # 2) everything else, asset by asset
+    reserve_bus = np.zeros((T, nb))
     for a in assets:
+        if a.get("reserve"):                     # A32: outside the market, redispatch-only
+            reserve_bus[:, bidx[a["bus"]]] += float(a.get("p_nom") or 0.0)
+            continue
         if a["kind"] == "producer" and is_plain_profile(a):
             continue
         x = evaluate(a, ctx)
@@ -235,5 +242,5 @@ def simulate(
         res_bus=res_bus, disp_bus=disp_bus, headroom_bus=headroom_bus,
         res_by_carrier=res_c or None, headroom_by_carrier=head_c or None,
         disp_by_carrier=disp_c or None,
-        down_bus=down_bus, down_by_carrier=down_c or None,
+        down_bus=down_bus, down_by_carrier=down_c or None, reserve_bus=reserve_bus,
     )

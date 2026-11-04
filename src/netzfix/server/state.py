@@ -80,6 +80,7 @@ class Playground:
                 c = a["carrier"]
                 self.capacity[c] = self.capacity.get(c, np.zeros(12)) + np.asarray(
                     a["p_nom_monthly"], float)
+        self.reserve_units = self._apply_grid_reserve()
         self.replay_report = self._apply_entsoe_replay()
         self.regional_cf = self._load_regional_cf()
         self.min_load_units = self._apply_min_load()
@@ -89,6 +90,43 @@ class Playground:
                  if a["kind"] == "consumer" and a["behaviour"]["type"] == "demand_share"}
         self.gap_share = np.array([share.get(b, 0.0) for b in self.buses])
         self.gap_share = self.gap_share / self.gap_share.sum()
+
+    def _apply_grid_reserve(self) -> dict | None:
+        """A32: reserve units produce nothing in the market; redispatch may start them
+        (upward block at the grid-reserve price). Must run before the ENTSO-E replay."""
+        from netzfix.markets import plants
+
+        if not load_config().get("grid_reserve", {}).get("enabled"):
+            return None
+        if not plants.RESERVE_OUT.exists():
+            raise FileNotFoundError(f"{plants.RESERVE_OUT} missing: run netzfix.markets.plants")
+        t = pd.read_csv(plants.RESERVE_OUT)
+        # units with measured 2024 output (ENTSO-E replay) keep their measurement: the list's
+        # status is from 2026 and several of these units were in the market during 2024
+        from netzfix.data import entsoe_units as eu
+
+        measured: set[str] = set()
+        if load_config().get("entsoe_units", {}).get("replay") and eu.LINKS.exists():
+            lk = pd.read_csv(eu.LINKS).dropna(subset=["assets"])
+            measured = {i for s in lk["assets"] for i in s.split(";")}
+        n, mw, kept = 0, 0.0, 0
+        for r in t.itertuples():
+            a = self.baseline.get(r.id)
+            if a is None or a["kind"] != "producer":
+                continue
+            if r.id in measured:
+                kept += 1
+                continue
+            a["reserve"] = True
+            a["behaviour"] = {"type": "constant", "p_mw": 0,
+                              "note": f"grid reserve ({r.status}): redispatch only"}
+            n += 1
+            mw += float(a.get("p_nom") or 0.0)
+            if a["p_nom_monthly"] is not None and a["carrier"] in self.capacity:
+                # reserve capacity does not belong to the market fleet's national profile
+                self.capacity[a["carrier"]] = np.clip(
+                    self.capacity[a["carrier"]] - np.asarray(a["p_nom_monthly"], float), 0, None)
+        return {"units": n, "mw": round(mw, 1), "measured_units_kept_as_replay": kept}
 
     def _apply_min_load(self) -> int:
         """A31: attach minimum load (share of p_nom) to individual thermal units."""
@@ -144,13 +182,30 @@ class Playground:
         links = pd.read_csv(eu.LINKS).dropna(subset=["assets"])
         rep: dict[str, np.ndarray] = {}
         rep_cap: dict[str, np.ndarray] = {}
+        rep_reserve: dict[str, np.ndarray] = {}      # A32: reserve blocks' measured output
         n_assets = 0
+        # groups made only of reserve units: their whole measured output is reserve calls
         for g, d in links.groupby("group"):
-            ids = [i for i in d["assets"].iloc[0].split(";") if i in self.baseline]
+            all_ids = [i for i in d["assets"].iloc[0].split(";") if i in self.baseline]
+            ids = [i for i in all_ids if not self.baseline[i].get("reserve")]   # A32
+            pn_all = sum(float(self.baseline[i]["p_nom"] or 0.0) for i in all_ids)
             pn = np.array([float(self.baseline[i]["p_nom"] or 0.0) for i in ids])
             if not ids or pn.sum() <= 0:
+                if all_ids and all(self.baseline[i].get("reserve") for i in all_ids):
+                    c0 = self.baseline[all_ids[0]]["carrier"]
+                    xr = units[d["code"].tolist()].sum(axis=1).to_numpy(dtype="float64")
+                    rep_reserve[c0] = rep_reserve.get(c0, 0.0) + xr
                 continue
-            x = units[d["code"].tolist()].sum(axis=1).to_numpy(dtype="float64")
+            # a plant's measured output also contains its reserve blocks' calls: keep only the
+            # market blocks' share (by p_nom)
+            x_all = units[d["code"].tolist()].sum(axis=1).to_numpy(dtype="float64")
+            x = x_all * pn.sum() / pn_all
+            if pn.sum() < pn_all:
+                # the reserve blocks' measured output was redispatch (reserve calls), not market:
+                # remove it from the national target too, so the residual profile does not
+                # hand it to other plants
+                c0 = self.baseline[ids[0]]["carrier"]
+                rep_reserve[c0] = rep_reserve.get(c0, 0.0) + x_all - x
             self.ts[f"entsoe:{g}"] = x
             for i, w in zip(ids, pn / pn.sum(), strict=True):
                 a = self.baseline[i]
@@ -161,15 +216,18 @@ class Playground:
                 rep_cap[c] = rep_cap.get(c, np.zeros(12)) + np.asarray(m, dtype="float64")
                 n_assets += 1
         report: dict = {"groups": int(links["group"].nunique()), "assets": n_assets}
-        for c, x in rep.items():
+        for c in set(rep) | set(rep_reserve):
+            x = rep.get(c, 0.0) + rep_reserve.get(c, 0.0)
             if c in self.ts:
                 r = self.ts[c].to_numpy(dtype="float64") - x
                 report[c] = {"smard_twh": float(self.ts[c].sum() / 1e6),
-                             "replayed_twh": float(x.sum() / 1e6),
+                             "replayed_twh": float(np.sum(rep.get(c, 0.0)) / 1e6),
+                             "reserve_calls_removed_twh": float(
+                                 np.sum(rep_reserve.get(c, 0.0)) / 1e6),
                              "hours_negative_residual": int((r < 0).sum()),
                              "negative_residual_twh": float(-r[r < 0].sum() / 1e6)}
                 self.ts[f"residual:{c}"] = np.clip(r, 0.0, None)
-            if c in self.capacity:
+            if c in self.capacity and c in rep_cap:
                 self.capacity[c] = np.clip(self.capacity[c] - rep_cap[c], 0.0, None)
         return report
 

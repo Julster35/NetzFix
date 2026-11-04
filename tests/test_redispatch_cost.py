@@ -84,3 +84,26 @@ def test_cost_rule_resolves_overload_even_when_relief_is_expensive():
     assert r.down_disp[0, 1] == pytest.approx(2_000.0, abs=1e-3)
     assert r.down_res.sum() == pytest.approx(0.0, abs=1e-6)
     assert r.cost_eur[0] == pytest.approx(159_540.0, abs=0.5)
+
+
+def _toy_reserve(market_headroom: float):
+    """Bus 0 conventional down (PTDF 1), bus 1 market up (PTDF 0), bus 2 reserve up (PTDF 0).
+    10 MW overload. Market pair 10 * (222.00 - 142.23) = 797.7; reserve pair
+    10 * (476.50 - 142.23) = 3,342.7 -> market up first, reserve only without market headroom."""
+    ptdf = np.array([[1.0, 0.0, 0.0, 0.0]])
+    rule = CostRule(np.array([222.00]), np.array([-142.23]), np.array([575.70]),
+                    np.array([476.50]))
+    return redispatch(np.array([[110.0]]), ptdf, np.array([100.0]),
+                      headroom=np.array([[0.0, market_headroom, 0.0, 0.0]]),
+                      disp=np.array([[50.0, 0.0, 0.0, 0.0]]), res=np.zeros((1, 4)),
+                      limit_pu=1.0, costs=rule, reserve=np.array([[0.0, 0.0, 50.0, 0.0]]))
+
+
+def test_reserve_used_only_after_market_plants():
+    r = _toy_reserve(50.0)
+    assert r.up[0, 1] == pytest.approx(10.0, abs=1e-6)
+    assert r.up_reserve.sum() == pytest.approx(0.0, abs=1e-6)
+    assert r.cost_eur[0] == pytest.approx(797.7, abs=1e-3)
+    r = _toy_reserve(0.0)
+    assert r.up_reserve[0, 2] == pytest.approx(10.0, abs=1e-6)
+    assert r.cost_eur[0] == pytest.approx(3342.7, abs=1e-3)

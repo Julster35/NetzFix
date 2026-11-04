@@ -45,10 +45,12 @@ def main() -> None:
     r = pg.simulate(ctx, track_carriers=True)
     costs = CostRule.from_config(pg.ts.index, rcfg["prices"]) if rule == "cost_based" else None
     down = r.down_bus if r.down_bus is not None else r.disp_bus     # A31 minimum load
+    reserve = r.reserve_bus if (r.reserve_bus is not None and r.reserve_bus.any()) else None
     rd = redispatch(r.flow, pg.ptdf, pg.s_nom, r.headroom_bus, down, r.res_bus,
-                    limit_pu=a.alpha, costs=costs)
+                    limit_pu=a.alpha, costs=costs, reserve=reserve)
+    ur = rd.up_reserve if rd.up_reserve is not None else np.zeros_like(rd.up)
     q = pg.ts.index.tz_convert("Europe/Berlin").quarter.to_numpy()
-    tot = (rd.up + rd.down_disp + rd.down_res).sum(axis=1)
+    tot = (rd.up + ur + rd.down_disp + rd.down_res).sum(axis=1)
     out = {
         "alpha": a.alpha,
         "rule": rule,
@@ -56,7 +58,8 @@ def main() -> None:
                                         capture_output=True, text=True).stdout.strip(),
         "seconds": round(time.time() - t0, 1),
         "gwh": {"up": rd.up.sum() / 1e3, "down_dispatchable": rd.down_disp.sum() / 1e3,
-                "down_curtail": rd.down_res.sum() / 1e3, "up_plus_down": tot.sum() / 1e3},
+                "down_curtail": rd.down_res.sum() / 1e3, "up_reserve": ur.sum() / 1e3,
+                "up_plus_down": tot.sum() / 1e3},
         "unresolved_gwh": float(rd.unresolved.sum() / 1e3),
         "hours_unresolved": int((rd.unresolved > 0.5).sum()),
         "selection_cost_meur": (float(rd.cost_eur.sum() / 1e6) if rd.cost_eur is not None
@@ -67,6 +70,7 @@ def main() -> None:
         "down_disp_by_carrier_gwh": attribute(rd.down_disp, down,
                                               r.down_by_carrier or r.disp_by_carrier),
         "min_load_units": pg.min_load_units,
+        "reserve_units": pg.reserve_units,
     }
     d = Path(a.out)
     d.mkdir(parents=True, exist_ok=True)
