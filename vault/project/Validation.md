@@ -194,3 +194,18 @@ Julien (2026-11-04): "can we work on the fix already".
 - Tests: **T1** 4,672 fail; **T2** offshore / onshore / solar 6.6 / 77.0 / 16.4% fail; **T3** Q4 share 54.8% fail (Q1 6,737, Q2 1,013, Q3 3,211, Q4 13,306 GWh); **T4** gas 4,973, hard coal 3,544 pass; **T5** 38.5% fail. 1 of 5.
 - **Reading:** regional weather raised the volume at every margin (alpha\* up from 0.950 to 0.975: weather-driven flows are more concentrated) and moved T3 only slightly (56.4 → 54.8%). The pre-registered expectation (T3 towards 34%) did not hold. T2 unchanged, as expected under handicap (1), which v6 addresses.
 
+### 2026-11-04 - Calibration v6 (available pre-curtailment wind/solar): RESULTS
+- Runs: grid job **5785** (code `9094571`), alpha\* run via `srun` on the same code; files `results/calibration_v6/`. Grid (GWh, unresolved): 0.70 → 90,294 (969); 0.75 → 73,352 (667); 0.80 → 59,881 (447); 0.85 → 48,381 (287); 0.90 → 38,120 (184); 0.95 → 29,388 (117); 1.00 → 22,483 (73). **alpha\* = 0.985**; run at 0.985: 24,274 GWh (up 12,137, conventional down 6,851, curtailment 5,286; unresolved 84). Selection cost 3,745 M€.
+
+| Test | v4 | v5 | **v6** | Real 2024 |
+|---|---|---|---|---|
+| T1 curtailment (GWh) | 4,731 fail | 4,672 fail | **5,286 fail** | 9,374 |
+| T2 offshore / onshore / solar | 6.8 / 73.7 / 19.4% | 6.6 / 77.0 / 16.4% | **8.4 / 75.5 / 16.1% fail** | 48.9 / 36.3 / 14.9% |
+| T3 Q4 share | 56.4% | 54.8% | **54.8% fail** | 34.4% |
+| T4 top-2 upward | pass | pass | **gas 4,963, hard coal 3,603 pass** | gas, hard coal |
+| T5 renewables share of down | 38.5% | 38.5% | **43.5% fail** | 64.9% |
+
+- Curtailment by carrier (GWh): onshore 3,578, solar 762, **offshore 399** (real 4,562), biomass 393, hydro 141.
+- **Reading:** the pre-registered direction held (T1 +13%, T5 +5 pp, offshore share +1.8 pp) but the effect is small. The decisive number: the model makes 4.56 TWh more offshore energy available and curtails only 0.4 TWh of offshore in total. **Offshore wind is almost never behind a binding constraint in our grid**, even with the real energy and weather. The remaining T2 gap is therefore in the **network near the coast / the landing points** (export cable and onshore connection capacities, 220/380 kV coastal grid in the OSM model, or how TSOs actually curtail offshore under § 13 rather than via the cost rule), not in plant behaviour, weather or the selection rule (v2-v6 have now tested landing points, rule, real thermal output, weather and available energy). `medium`
+- v6 passes 1 of 5 (T4). Model default kept at v6 settings pending Julien.
+
