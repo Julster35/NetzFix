@@ -218,3 +218,18 @@ Julien (2026-11-04): "yes" to step 2 (plant costs, minimum load), "go on".
 - **Known handicaps:** no CHP heat must-run beyond minimum load; no shut-down option (real TSOs can order units off); minimum loads are technology midpoints, not unit data.
 - **Expectation (not a test):** conventional down falls, renewables curtailment and T5 rise; the volume per margin rises, so alpha\* moves up.
 
+### 2026-11-04 - Calibration v7 (minimum load of thermal units): RESULTS
+- Runs: grid job **5810** (code `9eed501`), alpha\* run via `srun` on the same code; files `results/calibration_v7/`. Grid (GWh, unresolved): 0.70 → 88,271 (986); 0.75 → 72,540 (680); 0.80 → 59,981 (457); 0.85 → 49,041 (296); 0.90 → 38,835 (191); 0.95 → 30,252 (122); 1.00 → 23,313 (76). **alpha\* = 0.991**; run at 0.991: 24,433 GWh (up 12,216, conventional down 5,860, curtailment 6,357; unresolved 83). Selection cost 4,301 M€. 394 units with minimum load.
+
+| Test | v2 (min-vol) | v6 | **v7 (min load)** | Real 2024 |
+|---|---|---|---|---|
+| T1 curtailment (GWh) | 7,864 pass | 5,286 fail | **6,357 pass** (band 6,093-12,655) | 9,374 |
+| T2 offshore / onshore / solar | 6.8 / 75.0 / 18.2% fail | 8.4 / 75.5 / 16.1% fail | **9.7 / 75.3 / 15.0% fail** | 48.9 / 36.3 / 14.9% |
+| T3 Q4 share | 58.8% fail | 54.8% fail | **54.9% fail** | 34.4% |
+| T4 top-2 upward | pass | pass | **gas 4,936, hard coal 3,666 pass** | gas 4,151, hard coal 3,792 |
+| T5 renewables share of down | 64.3% pass | 43.5% fail | **52.0% pass** (band 49.9-79.9) | 64.9% |
+
+- Conventional down 5,860 GWh (lignite 754, gas 2,937, hard coal 989, other 1,180) vs real 5,080 (= 14,454 − 9,374); lignite down fell from 2,486 (v6) to 754.
+- **Reading:** the pre-registered expectation held: minimum load was the main missing physical limit behind T1/T5 under the legal cost rule. **v7 passes 3 of 5 (T1, T4, T5)** with the legal redispatch rule, real thermal output, regional weather and available renewables, i.e. it matches v2's pass count with a realistic operator instead of a minimum-volume one. T1 and T5 pass near the lower edge of their bands. Remaining failures: **T2 (offshore share; network near the coast, see v6 reading)** and **T3 (Q4 share; unchanged across v3-v7)**.
+- **Decision (Claude, reversible, for Julien to confirm):** v7 settings become the model default (`redispatch.rule` cost_based, line margin 0.991, A26-A28, A31). The UI still shows the v2 margin and the min-volume rule until updated.
+
