@@ -16,7 +16,7 @@ Master list of every NetzFix data source, the layer it feeds, its access status 
 | 1 Grid | PyPSA-Eur OSM network v0.7 | [[OSM PyPSA-Eur Grid]] | open (ODbL) | ✅ 2026-11-03 |
 | 2 Units | Marktstammdatenregister (+ powerplantmatching coordinates) | [[Marktstammdatenregister]] | open | ✅ 2026-11-03 |
 | 3 Wind/PV | ERA5 via atlite | [[ERA5 and atlite]] | CDS key (Julien, 2026-11-04) | ⏳ 2024 cutout downloading (job 5733, 2026-11-04) |
-| 4 Conventional calibration | ENTSO-E generation per unit | [[ENTSO-E Transparency]] | **API token (U2)** | blocked on token |
+| 4 Conventional calibration | ENTSO-E generation per unit | [[ENTSO-E Transparency]] | File Library (login, no token) | ✅ 2024 held 2026-11-04 (176 DE units) |
 | 4 Fuel/CO2 prices 2024 | to choose (A14) | - | - | not chosen |
 | 5 Demand | v0: SMARD load × LAU population shares; later ENTSO-E + DemandRegio | [[SMARD]], [[DemandRegio]] | open (v0) | ✅ v0 2026-11-03 |
 | 6 Cross-border | ENTSO-E flows | [[ENTSO-E Transparency]] | token | not downloaded |
