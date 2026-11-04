@@ -57,7 +57,14 @@ def build(cfg: dict | None = None) -> pd.DataFrame:
     cls = [classify(r.carrier, r.Technologie, r.year, cfg) for r in a.itertuples()]
     a["technology"] = [c[0] for c in cls]
     a["min_load"] = [float(ml[c[1]]) if c[1] else 0.0 for c in cls]
-    out = a[["id", "carrier", "technology", "year", "min_load"]]
+    # A33: CHP flag from the BNetzA Kraftwerksliste (heat extraction "Ja")
+    from netzfix.config import DATA_RAW
+
+    k = pd.read_csv(DATA_RAW / "bnetza" / "Kraftwerksliste_CSV.csv", sep=";", encoding="cp1252",
+                    skiprows=9, dtype=str, usecols=["EinheitMastrNummer", "Waermeauskopplung_KWK"])
+    chp = set(k.loc[k["Waermeauskopplung_KWK"] == "Ja", "EinheitMastrNummer"])
+    a["chp"] = a["see"].isin(chp)
+    out = a[["id", "carrier", "technology", "year", "min_load", "chp"]]
     out.to_csv(OUT, index=False, encoding="utf-8")
     return out
 

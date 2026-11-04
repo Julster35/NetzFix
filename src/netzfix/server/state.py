@@ -135,12 +135,18 @@ class Playground:
         if not load_config().get("unit_flex", {}).get("enabled") or not plants.OUT.exists():
             return 0
         t = pd.read_csv(plants.OUT)
+        chp_cfg = load_config().get("chp_must_run", {})
+        share = chp_cfg.get("share", {}) if chp_cfg.get("enabled") else {}
         n = 0
         for r in t.itertuples():
             a = self.baseline.get(r.id)
-            if a is not None and r.min_load > 0:
+            if a is None:
+                continue
+            if r.min_load > 0:
                 a["min_load"] = float(r.min_load)
                 n += 1
+            if share and bool(getattr(r, "chp", False)) and a["carrier"] in share:
+                a["must_run_share"] = float(share[a["carrier"]])     # A33
         return n
 
     def _load_regional_cf(self) -> dict[str, pd.DataFrame] | None:

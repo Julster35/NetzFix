@@ -147,3 +147,11 @@ grid_reserve:
   statuses: ["Netzreserve aufgrund § 13b EnWG", "Netzreserve aufgrund von KVBG",
              "Kapazitätsreserve aufgrund von § 13e EnWG", "besonderes netztechnisches Betriebsmittel"]
 
+chp_must_run:
+  # A33 - heat-coupled share of the output of CHP units (Kraftwerksliste Waermeauskopplung_KWK = Ja)
+  # that redispatch cannot reduce. Share = KWK electricity / (KWK + condensation electricity) of
+  # CHP plants >= 10 MW in 2024 (Monitoringbericht 2025, Table 10, PDF p. 72):
+  # gas 36.8 / (36.8 + 10.0); hard coal 5.2 / (5.2 + 10.2); lignite 1.7 / (1.7 + 69.6)
+  enabled: false            # v9 switches it on
+  share: {gas: 0.786, hard_coal: 0.338, lignite: 0.024}
+

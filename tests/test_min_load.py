@@ -24,3 +24,14 @@ def test_down_room_is_output_above_min_load_of_running_units():
     assert np.allclose(r.disp_bus, [[120.0, 30.0]])
     assert np.allclose(r.down_bus, [[25.0, 30.0]])
     assert np.allclose(r.headroom_bus, [[80.0, 70.0]])
+
+
+def test_chp_must_run_caps_down_room():
+    # 80 MW, min load 55 MW -> 25 MW; CHP share 0.786 -> at most 0.214 * 80 = 17.12 MW
+    idx = pd.date_range("2024-01-01", periods=1, freq="h", tz="UTC")
+    a = _unit("a", "x", 80.0, 0.55)
+    a["must_run_share"] = 0.786
+    r = simulate(assets=[a], buses=["x"], ptdf=np.zeros((0, 1)), branches=[], s_nom=np.zeros(0),
+                 borders=pd.DataFrame({"bus": ["x"], "capacity_mw": [1.0], "border_id": ["b"]}),
+                 ctx=Context(ts=pd.DataFrame(index=idx), capacity={}), balancing="border")
+    assert np.allclose(r.down_bus, [[17.12]])

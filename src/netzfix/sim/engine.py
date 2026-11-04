@@ -107,6 +107,7 @@ def simulate(
     disp_rows: list[np.ndarray] = []
     disp_pmax: list[np.ndarray] = []
     disp_pmin_frac: list[float] = []                 # A31 minimum load, share of pmax
+    disp_must_run: list[float] = []                  # A33 CHP heat-coupled share of output
     disp_meta: list[tuple[int, str]] = []   # (bus idx, carrier)
 
     def add_carrier(c: str, x: np.ndarray) -> None:
@@ -129,6 +130,7 @@ def simulate(
                 disp_rows.append(cap_t[i] * cf)
                 disp_pmax.append(cap_t[i])
                 disp_pmin_frac.append(0.0)
+                disp_must_run.append(0.0)
                 disp_meta.append((int(i), carrier))
         else:
             reg = (ctx.regional_cf or {}).get(carrier)
@@ -157,6 +159,7 @@ def simulate(
             disp_rows.append(x)
             disp_pmax.append(np.full(T, float(a.get("p_nom") or x.max(initial=0.0))))
             disp_pmin_frac.append(float(a.get("min_load") or 0.0))
+            disp_must_run.append(float(a.get("must_run_share") or 0.0))
             disp_meta.append((i, c))
         elif a["kind"] == "consumer":
             inj[:, i] -= x
@@ -207,6 +210,8 @@ def simulate(
         # offers no downward room in that hour
         pmin = disp_pmin_frac[k] * pmax[k]
         room = np.where(disp[k] >= pmin, disp[k] - pmin, 0.0) if disp_pmin_frac[k] else disp[k]
+        if disp_must_run[k]:                 # A33: heat-coupled output cannot be reduced
+            room = np.minimum(room, (1.0 - disp_must_run[k]) * disp[k])
         down_bus[:, i] += room
         track(down_c, c, i, room)
         add_carrier(c, disp[k])
