@@ -25,6 +25,10 @@ weather:
   solar_panel: CSi
   solar_orientation: latitude_optimal
   regional_profiles: true
+  profile_basis: available      # A28: smard_actual (v5) | available (pre-curtailment, v6)
+  # A28 - energy curtailed by redispatch in 2024, GWh ([[SMARD 2025 Netzengpassmanagement 2024]],
+  # saved article 2025-04-02): offshore 4,562, onshore 3,384, solar 1,389
+  curtailed_gwh_2024: {wind_offshore: 4562, wind_onshore: 3384, solar: 1389}
 
 network:
   source: pypsa-eur-osm    # A4 - PyPSA-Eur base_network: osm (pinned release below)

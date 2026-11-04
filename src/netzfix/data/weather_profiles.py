@@ -28,8 +28,25 @@ SMARD_FILE = DATA_PROCESSED / "smard_DE_2024.parquet"
 REPORT = DATA_PROCESSED / "regional_cf_2024_report.json"
 
 
-def out_path(carrier: str, year: int = 2024) -> Path:
-    return DATA_PROCESSED / f"regional_cf_{carrier}_{year}.parquet"
+def out_path(carrier: str, year: int = 2024, basis: str = "smard_actual") -> Path:
+    """basis "smard_actual": scaled to SMARD every hour (after curtailment, A27);
+    "available": annual level = SMARD + curtailed energy, hourly shape from ERA5 (A28)."""
+    tag = "" if basis == "smard_actual" else "available_"
+    return DATA_PROCESSED / f"regional_cf_{tag}{carrier}_{year}.parquet"
+
+
+def available_target(actual: np.ndarray, raw: np.ndarray, energy: float,
+                     k_max: float = 5.0) -> tuple[float, np.ndarray]:
+    """National available output per hour = max(actual, k * raw), with k such that the sum
+    equals `energy` (same units as actual * hours). Bisection; the sum rises with k."""
+    lo, hi = 0.0, k_max
+    for _ in range(60):
+        k = 0.5 * (lo + hi)
+        if np.maximum(actual, k * raw).sum() > energy:
+            hi = k
+        else:
+            lo = k
+    return k, np.maximum(actual, k * raw)
 
 
 def _cell_cf(cutout, carrier: str, w: dict):
@@ -100,6 +117,22 @@ def build(year: int = 2024) -> dict:
         scaled = np.clip(scaled, 0.0, 1.0)
         out = pd.DataFrame(scaled.astype("float32"), index=smard.index, columns=buses)
         out.to_parquet(out_path(carrier, year))
+        # A28: available (pre-curtailment) output. National available per hour =
+        # max(SMARD actual, k * ERA5 raw): never below what was really fed in; k is set by
+        # bisection so that the year's available energy = SMARD actual + energy curtailed by
+        # redispatch. Regional shape: ERA5 (each bus scaled by available_nat / raw_nat).
+        curt_twh = float(w["curtailed_gwh_2024"][carrier]) / 1e3
+        avail_twh = target.sum() / 1e6 + curt_twh
+        k_av, av_target = available_target(target, nat_raw, avail_twh * 1e6)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            ka = np.where(nat_raw > 1.0, av_target / nat_raw, np.nan)
+        av = raw.to_numpy() * np.nan_to_num(ka)[:, None]
+        fb2 = np.isnan(ka) & (av_target > 0.0)
+        av[fb2] = nat_cf[fb2, None]
+        av = np.clip(av, 0.0, 1.0)
+        pd.DataFrame(av.astype("float32"), index=smard.index, columns=buses).to_parquet(
+            out_path(carrier, year, "available"))
+        av_nat = (av * cap_t).sum(axis=1)
         got = (scaled * cap_t).sum(axis=1)
         report[carrier] = {
             "units": int(len(u)), "buses": len(buses),
@@ -108,6 +141,13 @@ def build(year: int = 2024) -> dict:
             "k_median": float(np.nanmedian(k)), "k_p95": float(np.nanpercentile(k, 95)),
             "fallback_hours": int(fb.sum()),
             "corr_raw_vs_smard": float(np.corrcoef(nat_raw, target)[0, 1]),
+            "available": {
+                "k": float(k_av), "target_twh": float(avail_twh),
+                "got_twh": float(av_nat.sum() / 1e6),
+                "excess_over_smard_twh": float(np.clip(av_nat - target, 0, None).sum() / 1e6),
+                "deficit_vs_smard_twh": float(np.clip(target - av_nat, 0, None).sum() / 1e6),
+                "hours_below_smard": int((av_nat < target - 1.0).sum()),
+            },
         }
     REPORT.write_text(json.dumps(report, indent=1), encoding="utf-8")
     return report

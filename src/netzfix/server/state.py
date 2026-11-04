@@ -93,9 +93,15 @@ class Playground:
         """A27: per-bus wind/solar capacity factors from ERA5 (scaled to SMARD hourly)."""
         from netzfix.data import weather_profiles as wp
 
-        if not load_config()["weather"].get("regional_profiles"):
+        w = load_config()["weather"]
+        if not w.get("regional_profiles"):
             return None
-        out = {c: pd.read_parquet(wp.out_path(c)) for c in wp.CARRIERS if wp.out_path(c).exists()}
+        basis = w.get("profile_basis", "smard_actual")
+        paths = {c: wp.out_path(c, basis=basis) for c in wp.CARRIERS}
+        missing = [str(p) for p in paths.values() if not p.exists()]
+        if missing:
+            raise FileNotFoundError(f"regional profiles ({basis}) missing: {missing}")
+        out = {c: pd.read_parquet(p) for c, p in paths.items()}
         return out or None
 
     def _apply_entsoe_replay(self) -> dict | None:
