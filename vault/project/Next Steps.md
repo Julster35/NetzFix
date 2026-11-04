@@ -8,18 +8,18 @@ ai-first: true
 # Next Steps
 
 ## For future agent
-Ordered actions as of 2026-11-03, end of session. Julien re-scoped to a playground first ([[Decision Log]] "Re-scope"). The playground runs with neighbours as Kron equivalents, measured border flows, a redispatch operator and a calibrated line margin (0.933, [[Validation]] v2). Tests T1, T4, T5 pass and T2 (curtailment mix), T3 (Q4 share) fail. The A/B/C market-design work and the hypothesis freeze wait until [[Validation]] passes or Julien accepts the failures in the [[Decision Log]].
+Ordered actions as of 2026-11-04, end of session. The 2024 twin now has the legal redispatch rule, real thermal output, regional weather, available renewables and minimum load; calibration v7 passes T1, T4, T5 (line margin 0.991). Remaining failures: T2 (offshore share, a coastal-grid / operational question) and T3 (Q4 share, December-dominated, partly 220 kV artefacts). The market model (step 3) and A/B/C wait until validation is accepted by Julien.
 
-> [!todo] Resume here (2026-11-04)
-> **Julien (before or at the start of the session):**
-> - [ ] Copernicus CDS key: register at https://cds.climate.copernicus.eu, copy the token from https://cds.climate.copernicus.eu/how-to-api into `C:\Users\julie\.cdsapirc` (two lines: `url: https://cds.climate.copernicus.eu/api` and `key: <token>`); accept the ERA5 single-levels licence at the bottom of the dataset's download form. Do not paste the token into chat.
-> - [ ] Reconnect the chair VPN so `ssh jufr@10.86.177.11` works again (it timed out on 2026-11-03).
-> - [ ] Decide what comes first: (a) priority/cost-based redispatch rule (O1) or (b) regional weather (ERA5).
-> - [ ] Optional: ENTSO-E API token into `.env` (U2); open the playground and give UI feedback.
+> [!todo] Resume here (2026-11-05)
+> **Claude, in order:**
+> 1. **Evaluate v8** (grid-reserve units, job 5819 on the chair server, `results/calibration_v8/` there): copy JSONs, `calibration_report.py --dir results/calibration_v8`, run at alpha* (rounded, via `srun`, same code `9a33e0f`), T1-T5 into [[Validation]].
+> 2. **v9 = CHP must-run** (A33, code ready, `chp_must_run.enabled: false` → true): pre-register in [[Validation]] first, then run.
+> 3. **T3 / 220 kV artefacts:** check the worst branches from `results/diagnostics/v7_alpha_0.991.json` (Karlsruhe 49.02 N 8.29 E up to 3.1×; AT border 48.28 N 13.06 E) against OSM (parallel circuits, missing 380 kV links, wrong attachment) — a network fix is its own pre-registered version.
+> 4. **Yardstick:** netztransparenz.de daily per-plant redispatch CSV (public "Download CSV" form, 2024) - **ask Julien before downloading**; then monthly / per-TSO / per-plant comparison (T2, T3) as a new pre-registered test T6.
+> 5. **T2 offshore:** look for a held source on how TSOs curtail offshore (TenneT direct control vs DSO-coordinated onshore under Redispatch 2.0).
+> 6. Update the UI to the v7 defaults (cost rule, margin 0.991) once Julien confirms.
 >
-> **Claude:**
-> - [ ] Check that `.cdsapirc` works (without printing it), then fetch ERA5 2024 for DE + neighbours (on the server if reachable) and build per-bus wind/solar capacity factors with atlite.
-> - [ ] Pre-register the next calibration run (v3) in [[Validation]] before running it.
+> **Julien:** confirm v7 as default; decide whether the inferred coal price (8.3 €/MWh_th, A29) is acceptable or a data subscription is available at the chair; permission for the netztransparenz download.
 
 ## Open problems from calibration v2 (2026-11-03)
 1. **T2 curtailment mix fails** (offshore 6.8% vs 48.9% real). Rebuilt landing points did not help ([[Offshore Connections]]). Likely cause: our minimum-volume redispatch picks onshore wind near the bottleneck, while real operators follow the cost / priority order of § 13a EnWG with minimum factors for renewables (`medium`). → redispatch rule with priority weights (needs O1 decision; the weights must come from a held source, not invented).

@@ -11,7 +11,7 @@ ai-first: true
 
 An open-data model of the German transmission grid (PyPSA-Eur OSM network, MaStR fleet, atlite weather, ENTSO-E load, base year 2024) runs three market designs on the same system: **A** uniform + redispatch, **B** 2-5 zones + redispatch, **C** nodal. The answer is pre-registered ([[Hypotheses]]) and sealed with OpenTimestamps before any comparison. An interactive web twin shows the results.
 
-**Status (2026-11-03, end of session):** [[Playground]] runs (`uv run netzfix serve`): 2024 grid as is, 6.8 M MaStR units as 6,911 assets, neighbours as Kron-reduced equivalents driven by measured 2024 border flows ([[Energy-Charts]]), offshore landings reconstructed from data ([[Offshore Connections]]), and a minimum-volume redispatch operator. Line margin calibrated to 0.933 on 2024 redispatch volume ([[Validation]] v2): tests T1, T4, T5 pass; T2 (curtailment mix) and T3 (Q4 share) fail. Next: redispatch priority rule or regional weather ([[Next Steps]]). A/B/C later, hypotheses unfrozen.
+**Status (2026-11-04, end of session):** Digital twin of 2024 with the **legal redispatch rule** (§ 13 EnWG cost order, minimum factor 10, TSO calculated prices), **real 2024 output of 178 large thermal units** (ENTSO-E File Library), **regional ERA5 weather** with pre-curtailment wind/solar, **minimum load** of 394 units and a price layer (2024 frozen / latest / user). [[Validation]] v7: line margin 0.991, **T1, T4, T5 pass**; T2 (offshore share) and T3 (Q4 share) fail. v8 (grid-reserve units) running on the chair server (job 5819), CHP must-run (A33) prepared. Diagnostics: December = 36% of model volume, 220 kV artefact overloads up to 3.1×. See [[Next Steps]]. A/B/C later, hypotheses unfrozen.
 
 ---
 
