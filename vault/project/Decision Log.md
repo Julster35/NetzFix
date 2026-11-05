@@ -12,6 +12,20 @@ This is the record of design decisions for NetzFix, newest first, each with who 
 
 ---
 
+## 2026-11-05 - Web twin is research-only; JAO grid data allowed (Julien)
+**Decision:** Julien (2026-11-05): "ok we wont publish the twin and only use it for our reserach". The web twin and model files stay internal; JAO Core Static Grid Model data ([[JAO Core Static Grid Model]]) may be used in the model under JAO's research-use terms (source named).
+**Why:** JAO terms allow "educational, academic or research purposes" but restrict redistribution of derived content; the JAO line ratings are the only held per-circuit TSO ratings for all four German TSOs.
+**Consequences:** v9 network fix may use JAO Imax. Any later publication (paper figures, a public twin) needs a check against JAO's terms (contact@jao.eu) for what counts as derived content.
+
+---
+
+## 2026-11-05 - Calibration v8 is the model default (Julien)
+**Decision:** Julien (2026-11-05): "yes v8 as default". Defaults: `redispatch.rule` cost_based (A25), minimum load (A31), grid-reserve units redispatch-only at p_nr (A32, `grid_reserve.enabled: true`), line margin **0.997** ([[Validation]] "Calibration v8: RESULT"). Supersedes the proposed v7 default (0.991).
+**Why:** A32 follows § 13 Abs. 1c EnWG ([[EnWG 13 13a Redispatch]]); tests equivalent to v7 (T1, T4, T5 pass; T2, T3 fail), upward gas closer to 2024.
+**Consequences:** the web twin's redispatch now uses the same call as `scripts/calibrate_margin.py` (cost rule, minimum load, reserve; `src/netzfix/server/state.py`) and offers 0.997 as the calibrated limit; before this it ran the v0-v2 minimum-volume rule at 0.933. T1 and T5 pass near the lower edge of their bands. T2/T3 remain documented failures: do not quote offshore-vs-onshore or seasonal redispatch results yet.
+
+---
+
 ## 2026-11-03 - Neighbours as Kron-reduced equivalents with measured flows (Julien asked, Claude designed)
 **Decision:** Julien: "can we roughly model these outside connections without modeling the whole country? again can we leverage old data here?" Each AC neighbour is reduced from its own OSM grid (already downloaded) to its border substations + a hub; the hourly 2024 physical flow per country from the Energy-Charts API (public, CC BY 4.0) is injected at the hub. Replaces v0 (SMARD residual split by line capacity).
 **Why:** v0 put the SMARD residual (40.9 TWh) at the borders although the measured net import was 25.1 TWh, and split it by capacity (e.g. CH 26%, NO 2%; measured PL and CZ are export borders). A first v1 with one copper-plate node per country created ~4 GW of fake transit through NL (gross 5.5 GW on NL border lines vs 1.3 GW net, week of 15 Jan 2024); the Kron equivalent cut it to 3.2 GW.

@@ -152,6 +152,18 @@ chp_must_run:
   # that redispatch cannot reduce. Share = KWK electricity / (KWK + condensation electricity) of
   # CHP plants >= 10 MW in 2024 (Monitoringbericht 2025, Table 10, PDF p. 72):
   # gas 36.8 / (36.8 + 10.0); hard coal 5.2 / (5.2 + 10.2); lignite 1.7 / (1.7 + 69.6)
-  enabled: false            # v9 switches it on
+  enabled: false            # planned as v10 (v9 = network ratings)
   share: {gas: 0.786, hard_coal: 0.338, lignite: 0.024}
 
+line_ratings:
+  # A34 - TSO line ratings from the JAO Core Static Grid Model (6th release, 2024-09; research use
+  # only, Decision Log 2026-11-05). Imax = Fixed, else DLRmin, else min(Period 1-6); matched to the
+  # OSM lines by src/netzfix/network/jao_ratings.py (data/processed/line_ratings_jao.csv).
+  # osm = PyPSA-Eur defaults (v0-v8).
+  source: jao
+
+connection_kv:
+  # A35 - units whose MaStR grid-connection-point name states 220 or 380 kV are attached to the
+  # nearest bus of that voltage (data/processed/mastr_connection_kv.csv), if one lies within max_km.
+  enabled: true
+  max_km: 5.0

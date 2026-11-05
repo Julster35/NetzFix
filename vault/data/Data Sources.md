@@ -25,3 +25,5 @@ Master list of every NetzFix data source, the layer it feeds, its access status 
 | X Line ratings / FB | JAO | [[JAO]] | open | optional |
 
 Inventory of what is actually on disk: [[Raw Data Inventory]].
+
+- [[JAO Core Static Grid Model]] - TSO line ratings (Imax), R/X/B, transformers and PSTs per circuit for the Core region incl. 50Hertz, Amprion, TenneT DE, TransnetBW; 6th release (2024-09) held since 2026-11-05. Research use only (JAO terms).

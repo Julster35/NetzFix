@@ -58,6 +58,7 @@ class Playground:
         self.ptdf, self.branches, self.buses = gridmod.ptdf(n)
         s_line = n.lines.s_nom.to_dict()
         s_tr = n.transformers.s_nom.to_dict()
+        self.line_ratings = self._line_ratings(s_line)                  # A34
         self.s_nom = np.array([(s_line if b.startswith("Line:") else s_tr)[b.split(":", 1)[1]]
                                for b in self.branches], dtype=float)
         self.ts = pd.read_parquet(SMARD_FILE)
@@ -73,6 +74,7 @@ class Playground:
             lambda m: None if m is None else [float(x) for x in m])
         base = base.astype(object).where(base.notna(), None)
         self.baseline: dict[str, dict] = {r["id"]: r for r in base.to_dict("records")}
+        self.connection_kv_moves = self._apply_connection_kv()          # A35
         # national installed capacity per carrier at each month-end (normalises SMARD profiles)
         self.capacity: dict[str, np.ndarray] = {}
         for a in self.baseline.values():
@@ -90,6 +92,43 @@ class Playground:
                  if a["kind"] == "consumer" and a["behaviour"]["type"] == "demand_share"}
         self.gap_share = np.array([share.get(b, 0.0) for b in self.buses])
         self.gap_share = self.gap_share / self.gap_share.sum()
+
+    def _line_ratings(self, s_line: dict) -> dict | None:
+        """A34: replace OSM s_nom by JAO-based ratings for matched lines (in place)."""
+        if load_config().get("line_ratings", {}).get("source", "osm") != "jao":
+            return None
+        r = pd.read_csv(DATA_PROCESSED / "line_ratings_jao.csv")
+        r = r[(r.n_matched > 0) & r.line.isin(list(s_line))]
+        for ln, s in zip(r.line, r.s_nom_jao, strict=True):
+            s_line[ln] = float(s)
+        return {"lines_rated": int(len(r)), "mva_osm": float(r.s_nom_osm.sum()),
+                "mva_jao": float(r.s_nom_jao.sum())}
+
+    def _apply_connection_kv(self) -> list[dict]:
+        """A35: move units to the nearest bus of the voltage stated in MaStR."""
+        if not load_config().get("connection_kv", {}).get("enabled"):
+            return []
+        from netzfix.network.attach import nearest_bus
+
+        tab = pd.read_csv(DATA_PROCESSED / "mastr_connection_kv.csv")
+        max_km = float(load_config()["connection_kv"].get("max_km", 5.0))
+        buses = self.grid.network.buses
+        buses = buses[buses.country == "DE"] if "country" in buses else buses
+        buses = buses[~buses.index.str.startswith("NB-")]
+        moves = []
+        for unit, kv in zip(tab.unit, tab.kv, strict=True):
+            a = self.baseline.get(f"mastr/{unit}")
+            if a is None or a.get("lon") is None:
+                continue
+            cur = self.grid.network.buses.v_nom.get(a["bus"])
+            if cur == float(kv):
+                continue
+            b, d = nearest_bus(buses[buses.v_nom == float(kv)], [a["lon"]], [a["lat"]])
+            if float(d[0]) > max_km:          # stated voltage not present nearby in the grid
+                continue
+            moves.append({"id": a["id"], "from": a["bus"], "to": str(b[0]), "km": float(d[0])})
+            a["bus"] = str(b[0])
+        return moves
 
     def _apply_grid_reserve(self) -> dict | None:
         """A32: reserve units produce nothing in the market; redispatch may start them
@@ -363,21 +402,34 @@ class Playground:
         flow_before = r.flow
         rd_payload: dict = {"enabled": False}
         if redispatch_limit:
-            from netzfix.sim.redispatch import redispatch
+            from netzfix.config import load_config
+            from netzfix.sim.redispatch import CostRule, redispatch
 
-            rd = redispatch(r.flow, self.ptdf, self.s_nom, r.headroom_bus, r.disp_bus, r.res_bus,
-                            limit_pu=float(redispatch_limit))
+            # Same call as scripts/calibrate_margin.py (v8): rule from config (A25), minimum load
+            # (A31), grid-reserve units (A32).
+            rcfg = load_config()["redispatch"]
+            costs = (CostRule.from_config(win.index, rcfg["prices"])
+                     if rcfg["rule"] == "cost_based" else None)
+            down = r.down_bus if r.down_bus is not None else r.disp_bus
+            reserve = (r.reserve_bus if (r.reserve_bus is not None and r.reserve_bus.any())
+                       else None)
+            rd = redispatch(r.flow, self.ptdf, self.s_nom, r.headroom_bus, down, r.res_bus,
+                            limit_pu=float(redispatch_limit), costs=costs, reserve=reserve)
+            ur = rd.up_reserve if rd.up_reserve is not None else np.zeros_like(rd.up)
             v = rd.volume_twh()
-            net = rd.up - rd.down_disp - rd.down_res        # T x buses, + = more injection
+            v["up_reserve"] = float(ur.sum()) / 1e6
+            v["up_plus_down"] += v["up_reserve"]
+            net = rd.up + ur - rd.down_disp - rd.down_res   # T x buses, + = more injection
             r.flow = rd.flow
             r.injection = r.injection + net
             rd_payload = {
                 "enabled": True, "limit_pu": float(redispatch_limit),
-                "up_i16": _b64(np.clip(np.rint(rd.up), 0, 32767), "<i2"),
+                "rule": rcfg["rule"],
+                "up_i16": _b64(np.clip(np.rint(rd.up + ur), 0, 32767), "<i2"),
                 "down_i16": _b64(np.clip(np.rint(rd.down_disp + rd.down_res), 0, 32767), "<i2"),
                 "volume_gwh": {k: round(x * 1e3, 1) for k, x in v.items()},
                 "unresolved_mwh": round(float(rd.unresolved.sum()), 1),
-                "hourly_mw": np.round(rd.up.sum(axis=1), 1).tolist(),
+                "hourly_mw": np.round((rd.up + ur).sum(axis=1), 1).tolist(),
                 "flow_before_i16": _b64(np.clip(np.rint(flow_before), -32767, 32767), "<i2"),
             }
         flow = np.clip(np.rint(r.flow), -32767, 32767)

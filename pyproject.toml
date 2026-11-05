@@ -21,6 +21,7 @@ dependencies = [
     "cdsapi>=0.7.7",
     "atlite>=0.7.0",
     "pypdf>=6.21.4",
+    "openpyxl>=3.1.5",
 ]
 
 [project.scripts]

@@ -241,3 +241,63 @@ Julien (2026-11-04): "do nr. 1-3" (coast grid / T2, Q4 / T3, CHP must-run).
 - **Unchanged:** everything else of v7 (A25-A28, A31), target 24,565 GWh (it includes 1,788 GWh reserve), grid, interpolation, T1-T5. The reserve volume counts in up + down. Results `results/calibration_v8/`.
 - **Expectation (not a test):** small effect on T1/T5; slightly less winter volume near Karlsruhe (RDK 4S no longer injects).
 
+
+### 2026-11-05 - Calibration v8 (grid-reserve units): RESULT
+- Runs: chair server grid job **5819** (code `9a33e0f`, server `CODE_COMMIT`), alpha\* run via `srun` on the same code (2026-11-05); files `results/calibration_v8/alpha_*.json`, `report.json`; script `scripts/calibration_report.py --dir results/calibration_v8 --test 0.997`. Grid (GWh, unresolved): 0.70 → 89,311 (983); 0.75 → 73,507 (678); 0.80 → 60,928 (455); 0.85 → 50,011 (294); 0.90 → 39,800 (190); 0.95 → 31,090 (122); 1.00 → 24,080 (76). **alpha\* = 0.997** (grid interpolation 0.9965, rounded to 3 decimals); run at 0.997: 24,462 GWh (up from market plants 11,742 + **grid reserve 489**, conventional down 6,042, curtailment 6,189; unresolved 78 GWh in 347 h). Selection cost 4,345 M€ (descriptive). 36 reserve units (3,129 MW) without market output; 24 measured units kept as replay. `stated` (our result files)
+- Note on `report.json`: after the alpha\* run is added, the report re-interpolates with that point as a bracket (v8: 0.9963; v7: 0.9901; v6: 0.9830), so the stored `alpha_star` differs slightly from the alpha that was run. The run alpha is the grid-only interpolation, rounded as pre-registered. Not a deviation.
+
+| Test | v6 | v7 (min load) | **v8 (grid reserve)** | Real 2024 |
+|---|---|---|---|---|
+| T1 curtailment (GWh) | 5,286 fail | 6,357 pass | **6,189 pass** (band 6,093-12,655) | 9,374 |
+| T2 offshore / onshore / solar | 8.4 / 75.5 / 16.1% fail | 9.7 / 75.3 / 15.0% fail | **9.5 / 75.5 / 15.0% fail** | 48.9 / 36.3 / 14.9% |
+| T3 Q4 share | 54.8% fail | 54.9% fail | **54.8% fail** | 34.4% |
+| T4 top-2 upward | pass | gas 4,936, hard coal 3,666 pass | **gas 4,300, hard coal 3,902 pass** | gas 4,151, hard coal 3,792 |
+| T5 renewables share of down | 43.5% fail | 52.0% pass | **50.6% pass** (band 49.9-79.9) | 64.9% |
+
+- Conventional down 6,042 GWh (gas 3,039, hard coal 1,002, lignite 778, other 1,224) vs real 5,080. Quarter volume (GWh): Q1 6,960, Q2 1,116, Q3 2,970, Q4 13,415.
+- **Reading:** the pre-registered expectation held: a small effect on T1/T5, and the pass/fail pattern is unchanged (**3 of 5: T1, T4, T5**). Upward gas is now closer to the real figure (4,300 vs 4,151, v7 4,936), because the reserve block takes over part of the upward volume. The reserve supplies 489 GWh against 1,788 GWh in the real target (27%). T1 (6,189 vs lower bound 6,093) and T5 (50.6% vs 49.9%) both sit closer to the lower edge of their bands than in v7, so a further change could flip them to fail. T2 and T3 are unchanged: the reserve units do not touch the coastal-grid or December problems.
+- **Status:** v8 is a realism fix (A32) with no test change; whether it replaces v7 as the default is for Julien to decide (Claude's suggestion: yes, since A32 follows § 13 Abs. 1c EnWG and the test results are equivalent).
+
+### 2026-11-05 - T6 (yardstick: TSO redispatch measures 2024): PRE-REGISTRATION (before any T6 number is computed)
+Julien (2026-11-05): "ok then do 1 and 2" (2 = netztransparenz yardstick).
+- **Data (real, R):** netztransparenz.de "Redispatch" Download CSV, 2024, one file per month in UTC, `data/raw/netztransparenz/redispatch/redispatch_2024_MM_UTC.csv` (12 MANIFEST rows, downloaded 2026-11-05 by `src/netzfix/data/netztransparenz_redispatch.py`), [[netztransparenz Redispatch]]. Per measure and German day: start, end, reason, direction, mean/max MW, energy MWh, instructing TSO, plant or area, primary-energy class. Exact duplicate rows across month files are dropped (30 of 17,390). Only counts per category were looked at before this entry (reasons, directions, classes, TSOs, plant names); **no volume was summed by month, day, TSO or plant.**
+- **Selection R:** reasons `Strombedingter Redispatch` and `Strom- und Spannungsbedingter RD`; both directions; `BETROFFENE_ANLAGE != "Börse"` (the exchange leg has no location). Excluded: countertrades DE-DK1/DK2/NO2 (cross-border, not modelled), voltage-only redispatch (no AC voltage in the model), all test and trial runs of reserve units. Volume = `GESAMTE_ARBEIT_MWH`; each row counts on the Europe/Berlin date of its start + half its duration; days outside 2024 dropped.
+- **Model (M):** v8 default ([[Decision Log]] 2026-11-05), margin 0.997, same redispatch call as `scripts/calibrate_margin.py` (cost rule, minimum load, grid reserve). Volume = up + reserve up + conventional down + curtailment per bus and hour, summed per Europe/Berlin date.
+- **Tests (thresholds frozen here):**
+  - **T6a monthly shape:** total-variation distance between M and R monthly volume shares, ½·Σ|m_i − r_i| ≤ **0.15**. Overlaps T3 (Q4 share, model already known to be 54.8%).
+  - **T6b daily timing:** Spearman rank correlation of daily volumes, M vs R (366 days) ≥ **0.50**.
+  - **T6c control area:** share of volume by TSO; R by `ANWEISENDER_UENB`, M by the federal state of each bus mapped to a TSO with A26b (`entsoe_units.tso_by_nuts1`; approximate, since Hesse, Lower Saxony and Rhineland-Palatinate are split between two TSOs in reality). Pass if each of the four shares is within **±0.10**.
+  - **T6d offshore (descriptive, no pass/fail):** share of R's downward `Erneuerbar` volume at entries named `OWP*` (offshore connection points); a cross-check of the 48.9% offshore share used in T2 (BNetzA Monitoringbericht).
+- **Script:** `scripts/t6_yardstick.py` (to be written; result to `results/calibration_v8/t6.json`). The same test is applied to every later version without changing selection or thresholds; a change needs a new pre-registration entry.
+- Expectation (not a test): T6a fails (December-heavy model, see T3); T6c may pass, since the TSO split depends less on the 220 kV artefacts than the location within a control area.
+
+### 2026-11-05 - T6 on v8: RESULT
+- Run: laptop, `scripts/t6_yardstick.py --alpha 0.997 --out results/calibration_v8` at HEAD `d1cdb4a` plus uncommitted working tree (new script and downloader; the model and redispatch code path is unchanged since `9a33e0f`); files `results/calibration_v8/t6.json`, `t6_daily.csv`. Model total 24,462 GWh (= the v8 alpha\* run, reproduced on the laptop); 89 GWh of model volume sits on buses outside the NUTS-1 map (neighbour equivalents) and is left out of T6c. Real selection: 14,678 measures, **17,654 GWh** (lower than the 24,565 GWh calibration target, which also counts countertrade, reserve and voltage measures). `stated` (our result files)
+
+| Month (GWh) | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Model v8 | 3,288 | 2,586 | 1,086 | 560 | 292 | 264 | 389 | 1,591 | 990 | 520 | 4,110 | 8,786 |
+| Real (selection R) | 2,632 | 1,513 | 841 | 847 | 1,673 | 695 | 459 | 617 | 1,585 | 1,652 | 2,067 | 3,074 |
+
+| Test | Model v8 | Real 2024 | Threshold | Result |
+|---|---|---|---|---|
+| T6a monthly shape (TVD) | 0.286 | - | ≤ 0.15 | **fail** |
+| T6b daily Spearman | 0.483 | - | ≥ 0.50 | **fail** |
+| T6c 50Hertz / Amprion / TenneT / TransnetBW | 17.7 / 25.0 / 33.5 / **23.8%** | 16.3 / 28.5 / 42.7 / **12.5%** | ±0.10 each | **fail** (TransnetBW +11.3 pp; TenneT −9.1 pp, inside) |
+| T6d offshore (`OWP*`) share of real RES down (descriptive) | - | 59.9% (4,183 of 6,981 GWh) | - | consistent with T2's 48.9% being mostly offshore |
+
+- **Reading:** as expected, T6a fails: the model puts 36% of the year in December (real 17%) and almost nothing in May (292 vs 1,673 GWh). Unlike the expectation, **T6c fails**, because of TransnetBW: the model has twice the real share in Baden-Württemberg. This matches the v7 diagnostics, where the Karlsruhe (RDK, 1.70 GW on a 220 kV bus) and Mannheim (GKM, 1.96 GW on a 220 kV bus) branches are among the most binding. T6b misses its threshold narrowly. The real data confirm that offshore wind (`OWP*` connection points) carries most of the renewable curtailment (T2).
+
+### 2026-11-05 - Network diagnosis Karlsruhe / Mannheim (descriptive, no run)
+- **GKM (Mannheim, 1.96 GW) feeds 220 kV in 2024:** "den im GKM erzeugten Kraftwerksstrom von der 220-kV- auf die verlustärmere 380-kV-Spannungsebene transformieren" (future UW Mannheim) [[TransnetBW 2021 Newsletter Rhein-Neckar Karlsruhe]] p. 4; that substation belongs to the Weinheim-Karlsruhe project with target commissioning 2031 [[TransnetBW 2025 Projektbroschuere Weinheim-Karlsruhe]] p. 1-2. `stated` → the model's 220 kV attachment of GKM is **correct**.
+- **Corridor:** Weinheim - Mannheim - Rheinau - Altlußheim - Daxlanden is "eine bestehende 220-Kilovolt (kV)-Freileitung", reinforced to 380 kV "So soll Überlastungen besser vorgebeugt werden" (same brochure); the Daxlanden area is 220 kV today [[TransnetBW 2023 Erlaeuterungsbericht UW Daxlanden]] p. 9-10. `stated`
+- **RDK (Karlsruhe, 1.70 GW):** connection voltage not found in any held or online source (Kraftwerksliste/MaStR: "Höchstspannung" only). Keep 220 kV (`medium`: the Daxlanden area is 220 kV).
+- **Onyx (Wilhelmshaven, 726 MW):** MaStR connection point "380-kV Anschluss KW Wilhelmshaven (Onyx)" at UW Fedderwarden; model attaches it at 220 kV → a real attachment error. `stated` (MaStR export 2026-11-03)
+- **Reading:** the TransnetBW excess in T6c (23.8% vs 12.5%) is **not** an attachment artefact at GKM. With measured plant output (A26) and a real 220 kV corridor, the remaining candidates are the corridor's rating (all 220 kV circuits at 491.6 MVA, PyPSA-Eur default conductor 2×240/40) and operational measures the model lacks (topology switching, temperature-dependent ratings). `medium` - not tested.
+
+### 2026-11-05 - Calibration v9 (TSO line ratings + stated connection voltage): PRE-REGISTRATION (before any v9 run)
+Julien (2026-11-05): "ok then do 1 and 2", "yes look for it" (TSO static grid model), "ok we wont publish the twin and only use it for our reserach" ([[Decision Log]]).
+- **Changes vs v8 (only these):** [[Assumptions]] **A34** (`line_ratings.source: jao`): 566 of 1,060 German AC lines (62% of line km) get ratings from 512 matched TSO circuits of the [[JAO Core Static Grid Model]]; rated MVA 1,105,912 → 1,160,168 (+4.9%); median ratio 1.00 (220 kV quartiles 0.78 / 1.00 / 1.05). Corridor examples: Maximiliansau-Daxlanden 492 → 953 MVA, Lübeck-Siems 492 → 362 MVA. Unmatched: 177 circuits without Imax (mostly Amprion: DLRmax only), 79 tripod legs incomplete, 75 length mismatches, 58 no bus near an end, 39 no path. **A35** (`connection_kv.enabled`): Onyx (726 MW) 220 → 380 kV (0.8 km). Matching method and its tuning (name lookup, tripods, length rule, lower bound) were developed on match diagnostics only (statuses, ratings of named lines); **no redispatch run with A34/A35 was looked at** except the smoke test below.
+- **Smoke test (not a result):** one week 2024-12-09 + 168 h at margin 0.997, laptop, working tree: 2,743 GWh up+down (v8 same week 2,120), unresolved 13.0 GWh. Only used to check that the code runs.
+- **Unchanged:** everything else of v8 (A25-A28, A31, A32; CHP must-run A33 off), target 24,565 GWh, alpha grid 0.70-1.00, interpolation and rounding, T1-T5, **T6 with the thresholds frozen 2026-11-05**. Results `results/calibration_v9/` (+ `t6.json`).
+- **Expectation (not a test):** T6c TransnetBW share falls (corridor ratings up to ~2x); alpha\* moves (direction unclear: some lines tighter, e.g. Lübeck, AT border); T2/T3 unclear.

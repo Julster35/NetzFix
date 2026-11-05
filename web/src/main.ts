@@ -462,7 +462,7 @@ function methodPanel() {
     <li>Producers: MaStR units in operation at 2024-12-31; units ≥ 10 MW individually, smaller ones aggregated per substation and technology; all attached to the nearest substation.</li>
     <li>Behaviour: each producer = rated MW × the 2024 national hourly capacity factor of its technology (SMARD output ÷ MaStR capacity). Demand = national SMARD load × population share of the substation's area.</li>
     <li>Balancing: historical 2024 net import is kept at the border; your edits are absorbed by dispatchable plants (or the border, if chosen).</li>
-    <li>Redispatch (optional): per hour, the smallest total up/down adjustment of plants (and curtailment) that keeps every line within the chosen limit. This is a lower bound on the operators' work, not German practice (no cost order, no reserve plants, no countertrading, no full n-1 analysis). Real 2024 congestion-management volume: about 30,320 GWh (BNetzA Monitoringbericht 2025).</li>
+    <li>Redispatch (optional): per hour, the cheapest up/down adjustment that keeps every line within the chosen limit, in the cost order of § 13 EnWG (TSO calculated prices, minimum factor 10 for renewables), respecting plant minimum load, with grid-reserve plants used for upward redispatch only. The default limit (99.7 %) is calibrated so the 2024 volume matches the 24,565 GWh target (calibration v8). No countertrading and no full n-1 analysis. Real 2024 congestion-management volume: about 30,320 GWh (BNetzA Monitoringbericht 2025).</li>
     <li>Flows: DC power flow via the PTDF matrix; loading = |flow| / s_nom.</li></ol>
   <h3>Known limits (v0)</h3><ul>
     <li>No regional weather: every wind/PV unit follows the national profile.</li>

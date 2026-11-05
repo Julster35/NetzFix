@@ -37,6 +37,9 @@ This is the catalog of all literature for NetzFix. **Held** items have a PDF in 
 | [[DIW 2013 DD68 Schroeder et al]] | Plant efficiency, minimum load, up/down times | `DIW_2013_DD68_..._Costs_of_Electricity_Generation.pdf` | Tables 27, 28, 35 |
 | [[UBA 2022 CO2 Emission Factors]] | Fuel CO2 emission factors (NIR) | `UBA_2022_CC29_CO2_Emission_Factors_Fossil_Fuels_Update.pdf` | Table 23 |
 | (no note yet) | BNetzA BK8-22-0001-A (2024): appropriate financial compensation of redispatch (§ 13a Abs. 2) + Anlage 1 | `BNetzA_2024_BK8-22-0001-A_Festlegung_Verguetung_Redispatch.pdf`, `..._Anlage1_Bestimmung_finanzieller_Ausgleich.pdf` | not read yet |
+- [[TransnetBW 2021 Newsletter Rhein-Neckar Karlsruhe]] - GKM feeds 220 kV (held 2026-11-05)
+- [[TransnetBW 2025 Projektbroschuere Weinheim-Karlsruhe]] - Weinheim-Karlsruhe corridor 220 kV until ~2031 (held 2026-11-05)
+- [[TransnetBW 2023 Erlaeuterungsbericht UW Daxlanden]] - Karlsruhe area 220 kV; RDK not mentioned (held 2026-11-05)
 
 ## To fetch next (grey literature and data documentation)
 - **BNetzA congestion-management report for full year 2024** (U3): not found at a guessable URL on 2026-11-03; download by hand.
