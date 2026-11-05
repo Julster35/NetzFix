@@ -160,10 +160,10 @@ line_ratings:
   # only, Decision Log 2026-11-05). Imax = Fixed, else DLRmin, else min(Period 1-6); matched to the
   # OSM lines by src/netzfix/network/jao_ratings.py (data/processed/line_ratings_jao.csv).
   # osm = PyPSA-Eur defaults (v0-v8).
-  source: jao
+  source: osm
 
 connection_kv:
   # A35 - units whose MaStR grid-connection-point name states 220 or 380 kV are attached to the
   # nearest bus of that voltage (data/processed/mastr_connection_kv.csv), if one lies within max_km.
-  enabled: true
+  enabled: false
   max_km: 5.0
