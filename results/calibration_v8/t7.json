@@ -1,0 +1,526 @@
+{
+ "alpha": 0.997,
+ "commit_at_run": "9fb9151",
+ "thresholds": {
+  "rho_min": 0.5,
+  "top_k": 5,
+  "top_hits_min": 3
+ },
+ "n_elements_matched": 41,
+ "T7a_H1_2024": {
+  "n_elements": 27,
+  "spearman": -0.2919258999095518,
+  "pass_rho": false,
+  "top_real": [
+   "Doerpen",
+   "Vierraden-Krajnik",
+   "Neuenhagen-Vierraden-Pasewalk",
+   "Ensdorf-Vigy-Oberzier-Maasbracht",
+   "Ovenstaedt-Bechterdissen"
+  ],
+  "top_model": [
+   "Buettel-Wilster",
+   "Wahle-Mecklar",
+   "Lauchstaedt-Vieselbach",
+   "Borken-Giessen",
+   "Altheim"
+  ],
+  "top_hits": 0,
+  "pass_top": false,
+  "table": [
+   {
+    "element": "Doerpen",
+    "real_h": 7651,
+    "model_h": 2.0
+   },
+   {
+    "element": "Vierraden-Krajnik",
+    "real_h": 2716,
+    "model_h": 0.0
+   },
+   {
+    "element": "Neuenhagen-Vierraden-Pasewalk",
+    "real_h": 1784,
+    "model_h": 0.0
+   },
+   {
+    "element": "Ensdorf-Vigy-Oberzier-Maasbracht",
+    "real_h": 1655,
+    "model_h": 0.0
+   },
+   {
+    "element": "Ovenstaedt-Bechterdissen",
+    "real_h": 1532,
+    "model_h": 4.0
+   },
+   {
+    "element": "StHuelfe-Ganderkesee",
+    "real_h": 1272,
+    "model_h": 0.0
+   },
+   {
+    "element": "Hagenwerder-Mikulowa",
+    "real_h": 1087,
+    "model_h": 0.0
+   },
+   {
+    "element": "Landesbergen-Wechold-Sottrum",
+    "real_h": 980,
+    "model_h": 3.0
+   },
+   {
+    "element": "Dollern-Sottrum",
+    "real_h": 682,
+    "model_h": 0.0
+   },
+   {
+    "element": "Grosskrotzenburg-Dettingen-Urberach",
+    "real_h": 660,
+    "model_h": 0.0
+   },
+   {
+    "element": "Dipperz-Grosskrotzenburg",
+    "real_h": 642,
+    "model_h": 0.0
+   },
+   {
+    "element": "Bergshausen-Borken",
+    "real_h": 621,
+    "model_h": 0.0
+   },
+   {
+    "element": "Diele-Rhede-Doerpen",
+    "real_h": 573,
+    "model_h": 0.0
+   },
+   {
+    "element": "Altheim",
+    "real_h": 553,
+    "model_h": 5.0
+   },
+   {
+    "element": "Wahle-Mecklar",
+    "real_h": 537,
+    "model_h": 20.0
+   },
+   {
+    "element": "Mecklar-Dipperz",
+    "real_h": 524,
+    "model_h": 0.0
+   },
+   {
+    "element": "Helmstedt-Wolmirstedt",
+    "real_h": 488,
+    "model_h": 0.0
+   },
+   {
+    "element": "Landesbergen-Ovenstaedt",
+    "real_h": 447,
+    "model_h": 1.0
+   },
+   {
+    "element": "Borken-Giessen",
+    "real_h": 426,
+    "model_h": 7.0
+   },
+   {
+    "element": "Grohnde-Voerden-Bergshausen",
+    "real_h": 361,
+    "model_h": 0.0
+   },
+   {
+    "element": "Wahle-Stadorf",
+    "real_h": 314,
+    "model_h": 0.0
+   },
+   {
+    "element": "Lauchstaedt-Vieselbach",
+    "real_h": 270,
+    "model_h": 10.0
+   },
+   {
+    "element": "Gronau-Hanekenfaehr",
+    "real_h": 112,
+    "model_h": 0.0
+   },
+   {
+    "element": "Diele-Meeden",
+    "real_h": 92,
+    "model_h": 4.0
+   },
+   {
+    "element": "Helmstedt-Wahle",
+    "real_h": 66,
+    "model_h": 2.0
+   },
+   {
+    "element": "Mecklar-Vieselbach",
+    "real_h": 54,
+    "model_h": 0.0
+   },
+   {
+    "element": "Buettel-Wilster",
+    "real_h": 46,
+    "model_h": 94.0
+   }
+  ]
+ },
+ "T7b_2023_vs_model_2024": {
+  "n_elements": 38,
+  "spearman": -0.08260366074758019,
+  "pass_rho": false,
+  "top_real": [
+   "Doerpen",
+   "Ovenstaedt-Bechterdissen",
+   "Grosskrotzenburg-Dettingen-Urberach",
+   "Ensdorf-Vigy-Oberzier-Maasbracht",
+   "Dollern-Sottrum"
+  ],
+  "top_model": [
+   "Daxlanden",
+   "Dollern-Ovenstaedt",
+   "Urberach-Daxlanden",
+   "Bischofsheim-Pfungstadt",
+   "Buerstadt-Pfungstadt-Hoheneck"
+  ],
+  "top_hits": 0,
+  "pass_top": false,
+  "table": [
+   {
+    "element": "Doerpen",
+    "real_h": 20197,
+    "model_h": 15.0
+   },
+   {
+    "element": "Ovenstaedt-Bechterdissen",
+    "real_h": 5468,
+    "model_h": 52.0
+   },
+   {
+    "element": "Grosskrotzenburg-Dettingen-Urberach",
+    "real_h": 4930,
+    "model_h": 0.0
+   },
+   {
+    "element": "Ensdorf-Vigy-Oberzier-Maasbracht",
+    "real_h": 4499,
+    "model_h": 0.0
+   },
+   {
+    "element": "Dollern-Sottrum",
+    "real_h": 3168,
+    "model_h": 0.0
+   },
+   {
+    "element": "Vierraden-Krajnik",
+    "real_h": 3064,
+    "model_h": 0.0
+   },
+   {
+    "element": "Landesbergen-Wechold-Sottrum",
+    "real_h": 3048,
+    "model_h": 11.0
+   },
+   {
+    "element": "Hagenwerder-Mikulowa",
+    "real_h": 2929,
+    "model_h": 0.0
+   },
+   {
+    "element": "Neuenhagen-Vierraden-Pasewalk",
+    "real_h": 2913,
+    "model_h": 0.0
+   },
+   {
+    "element": "Altheim",
+    "real_h": 2327,
+    "model_h": 39.0
+   },
+   {
+    "element": "Bergshausen-Borken",
+    "real_h": 1936,
+    "model_h": 0.0
+   },
+   {
+    "element": "StHuelfe-Ganderkesee",
+    "real_h": 1860,
+    "model_h": 0.0
+   },
+   {
+    "element": "Mecklar-Dipperz",
+    "real_h": 1786,
+    "model_h": 0.0
+   },
+   {
+    "element": "Dipperz-Grosskrotzenburg",
+    "real_h": 1529,
+    "model_h": 0.0
+   },
+   {
+    "element": "Wahle-Mecklar",
+    "real_h": 1483,
+    "model_h": 46.0
+   },
+   {
+    "element": "Stadorf-Lueneburg-Kruemmel",
+    "real_h": 1343,
+    "model_h": 0.0
+   },
+   {
+    "element": "Borken-Giessen",
+    "real_h": 1291,
+    "model_h": 47.0
+   },
+   {
+    "element": "Grohnde-Voerden-Bergshausen",
+    "real_h": 1284,
+    "model_h": 0.0
+   },
+   {
+    "element": "Bechterdissen-Guetersloh",
+    "real_h": 1254,
+    "model_h": 5.0
+   },
+   {
+    "element": "Oberbachern-Ottenhofen",
+    "real_h": 1109,
+    "model_h": 0.0
+   },
+   {
+    "element": "Wahle-Stadorf",
+    "real_h": 1088,
+    "model_h": 0.0
+   },
+   {
+    "element": "Grafenrheinfeld-Stalldorf",
+    "real_h": 1024,
+    "model_h": 0.0
+   },
+   {
+    "element": "Diele-Rhede-Doerpen",
+    "real_h": 1020,
+    "model_h": 0.0
+   },
+   {
+    "element": "Landesbergen-Ovenstaedt",
+    "real_h": 891,
+    "model_h": 15.0
+   },
+   {
+    "element": "Buerstadt-Pfungstadt-Hoheneck",
+    "real_h": 759,
+    "model_h": 118.0
+   },
+   {
+    "element": "Daxlanden",
+    "real_h": 730,
+    "model_h": 2475.0
+   },
+   {
+    "element": "Tiengen-Beznau",
+    "real_h": 686,
+    "model_h": 0.0
+   },
+   {
+    "element": "Emscherbruch-Mengede",
+    "real_h": 658,
+    "model_h": 0.0
+   },
+   {
+    "element": "Gronau-Hanekenfaehr",
+    "real_h": 645,
+    "model_h": 0.0
+   },
+   {
+    "element": "Urberach-Daxlanden",
+    "real_h": 571,
+    "model_h": 302.0
+   },
+   {
+    "element": "Helmstedt-Wolmirstedt",
+    "real_h": 458,
+    "model_h": 0.0
+   },
+   {
+    "element": "Lambsheim-Weingarten",
+    "real_h": 412,
+    "model_h": 0.0
+   },
+   {
+    "element": "Bischofsheim-Pfungstadt",
+    "real_h": 339,
+    "model_h": 174.0
+   },
+   {
+    "element": "Diele-Meeden",
+    "real_h": 218,
+    "model_h": 4.0
+   },
+   {
+    "element": "Dollern-Ovenstaedt",
+    "real_h": 117,
+    "model_h": 592.0
+   },
+   {
+    "element": "Mecklar-Vieselbach",
+    "real_h": 116,
+    "model_h": 0.0
+   },
+   {
+    "element": "Mecklar-Eisenach",
+    "real_h": 114,
+    "model_h": 0.0
+   },
+   {
+    "element": "Wilster-Audorf",
+    "real_h": 111,
+    "model_h": 0.0
+   }
+  ]
+ },
+ "T7c": {
+  "branch_hours_over_total": 26137,
+  "share_on_listed_elements": 0.14408692657917893,
+  "share_on_any_matched_element": 0.14408692657917893,
+  "n_branches_on_listed": 116,
+  "top15_model_branches": [
+   {
+    "branch": "Line:merged_relation/3943784-220+1",
+    "hours_over": 3625,
+    "v_nom": 220.0,
+    "s_nom": 491.556,
+    "lat": 53.915542169999995,
+    "lon": 10.69809517,
+    "element": []
+   },
+   {
+    "branch": "Line:merged_relation/14650605:b-220+1",
+    "hours_over": 2475,
+    "v_nom": 220.0,
+    "s_nom": 491.556,
+    "lat": 49.018720744999996,
+    "lon": 8.292632185,
+    "element": [
+     "Daxlanden"
+    ]
+   },
+   {
+    "branch": "Line:relation/941141-220",
+    "hours_over": 1880,
+    "v_nom": 220.0,
+    "s_nom": 491.556,
+    "lat": 53.562012984999996,
+    "lon": 8.135229559999999,
+    "element": []
+   },
+   {
+    "branch": "Line:way/202171172-220",
+    "hours_over": 1727,
+    "v_nom": 220.0,
+    "s_nom": 983.112,
+    "lat": 49.442609919999995,
+    "lon": 8.52436109,
+    "element": []
+   },
+   {
+    "branch": "Line:merged_way/358953278-220+2",
+    "hours_over": 1510,
+    "v_nom": 220.0,
+    "s_nom": 983.112,
+    "lat": 53.753755575,
+    "lon": 9.986458715000001,
+    "element": []
+   },
+   {
+    "branch": "Line:relation/2247305:b-220",
+    "hours_over": 1223,
+    "v_nom": 220.0,
+    "s_nom": 491.556,
+    "lat": 51.11763936,
+    "lon": 12.541825065000001,
+    "element": []
+   },
+   {
+    "branch": "Line:relation/3717719-220",
+    "hours_over": 1159,
+    "v_nom": 220.0,
+    "s_nom": 491.556,
+    "lat": 48.057576815000004,
+    "lon": 7.662090920000001,
+    "element": []
+   },
+   {
+    "branch": "Line:way/1293441399-220",
+    "hours_over": 975,
+    "v_nom": 220.0,
+    "s_nom": 491.556,
+    "lat": 48.282868785000005,
+    "lon": 13.059927640000002,
+    "element": []
+   },
+   {
+    "branch": "Line:way/73306291-220",
+    "hours_over": 972,
+    "v_nom": 220.0,
+    "s_nom": 983.112,
+    "lat": 48.480594015,
+    "lon": 13.083808470000001,
+    "element": []
+   },
+   {
+    "branch": "Line:way/1293441403-220",
+    "hours_over": 969,
+    "v_nom": 220.0,
+    "s_nom": 491.556,
+    "lat": 48.282868785000005,
+    "lon": 13.059927640000002,
+    "element": []
+   },
+   {
+    "branch": "Line:merged_way/201153707-220+2",
+    "hours_over": 861,
+    "v_nom": 220.0,
+    "s_nom": 491.556,
+    "lat": 50.855619829999995,
+    "lon": 6.868276505000001,
+    "element": []
+   },
+   {
+    "branch": "Line:way/42861709-380",
+    "hours_over": 822,
+    "v_nom": 380.0,
+    "s_nom": 1698.103,
+    "lat": 51.893783514999996,
+    "lon": 7.62221394,
+    "element": []
+   },
+   {
+    "branch": "Line:way/45737386-380",
+    "hours_over": 719,
+    "v_nom": 380.0,
+    "s_nom": 3396.205,
+    "lat": 53.745292575,
+    "lon": 9.569644405,
+    "element": []
+   },
+   {
+    "branch": "Line:relation/3717718-400",
+    "hours_over": 620,
+    "v_nom": 400.0,
+    "s_nom": 1787.476,
+    "lat": 48.00180951,
+    "lon": 7.65384334,
+    "element": []
+   },
+   {
+    "branch": "Line:merged_way/46107365-380+4",
+    "hours_over": 590,
+    "v_nom": 380.0,
+    "s_nom": 3396.205,
+    "lat": 53.863140325,
+    "lon": 9.428514955,
+    "element": []
+   }
+  ]
+ }
+}

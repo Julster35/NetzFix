@@ -1,0 +1,7 @@
+# Calibration v9 (pre-registered 2026-11-05, vault/project/Validation.md): TSO line ratings (A34)
+# + stated connection voltage (A35). Everything else = default (v8).
+line_ratings:
+  source: jao
+  variant: standard
+connection_kv:
+  enabled: true

@@ -94,15 +94,28 @@ class Playground:
         self.gap_share = self.gap_share / self.gap_share.sum()
 
     def _line_ratings(self, s_line: dict) -> dict | None:
-        """A34: replace OSM s_nom by JAO-based ratings for matched lines (in place)."""
-        if load_config().get("line_ratings", {}).get("source", "osm") != "jao":
+        """A34: replace OSM s_nom by JAO-based ratings for matched lines (in place).
+        A37 (`line_ratings.variant: dlrmax`): use the weather-dependent maximum instead.
+        Always keeps the DLRmax rating per line in `self.s_line_max` (for display)."""
+        lr = load_config().get("line_ratings", {})
+        path = DATA_PROCESSED / "line_ratings_jao.csv"
+        self.s_line_max, self.s_line_tso = {}, {}
+        if path.exists():
+            r0 = pd.read_csv(path)
+            r0 = r0[(r0.n_matched > 0) & r0.line.isin(list(s_line))]
+            self.s_line_tso = dict(zip(r0.line, r0.s_nom_jao.astype(float), strict=True))
+            if "s_nom_jao_dlrmax" in r0:
+                self.s_line_max = dict(zip(r0.line, r0.s_nom_jao_dlrmax.astype(float),
+                                           strict=True))
+        if lr.get("source", "osm") != "jao":
             return None
-        r = pd.read_csv(DATA_PROCESSED / "line_ratings_jao.csv")
+        col = "s_nom_jao_dlrmax" if lr.get("variant", "standard") == "dlrmax" else "s_nom_jao"
+        r = pd.read_csv(path)
         r = r[(r.n_matched > 0) & r.line.isin(list(s_line))]
-        for ln, s in zip(r.line, r.s_nom_jao, strict=True):
+        for ln, s in zip(r.line, r[col], strict=True):
             s_line[ln] = float(s)
-        return {"lines_rated": int(len(r)), "mva_osm": float(r.s_nom_osm.sum()),
-                "mva_jao": float(r.s_nom_jao.sum())}
+        return {"lines_rated": int(len(r)), "variant": col, "mva_osm": float(r.s_nom_osm.sum()),
+                "mva_jao": float(r[col].sum())}
 
     def _apply_connection_kv(self) -> list[dict]:
         """A35: move units to the nearest bus of the voltage stated in MaStR."""
@@ -362,6 +375,13 @@ class Playground:
             branches.append({"i": k, "id": bid, "kind": comp, "v": float(v),
                              "equivalent": bid.startswith("EQ-"),
                              "s_nom": round(float(self.s_nom[k]), 1),
+                             # A37: TSO weather-dependent maximum (JAO DLRmax), if matched
+                             "s_nom_max": (round(float(self.s_line_max[bid]), 1)
+                                           if comp == "Line" and bid in self.s_line_max
+                                           else None),
+                             "s_nom_tso": (round(float(self.s_line_tso[bid]), 1)
+                                           if comp == "Line" and bid in self.s_line_tso
+                                           else None),
                              "path": [[round(x, 5), round(y, 5)] for x, y in coords]})
         buses = [{"i": i, "id": b, "lon": round(float(n.buses.at[b, "x"]), 5),
                   "lat": round(float(n.buses.at[b, "y"]), 5), "v": float(n.buses.at[b, "v_nom"]),
@@ -381,6 +401,38 @@ class Playground:
         return [{k: a.get(k) for k in keep} for a in self.assets()]
 
     # ------------------------------------------------------------------ simulation
+    def security(self, limit_pu: float):
+        """A38: n-1 data for redispatch. One circuit of every real line and transformer may trip
+        (except single-circuit bridges, whose loss splits the grid) and every real branch is
+        monitored; the neighbour equivalents (EQ-) and cross-border elements (a bus outside DE)
+        are neither (base-case limit only).
+        `limit_pu`: post-fault limit as a share of s_nom."""
+        from netzfix.sim.redispatch import Security, lodf_matrix
+
+        if getattr(self, "_lodf", None) is None:
+            n = self.grid.network
+            bi = {b: i for i, b in enumerate(self.buses)}
+            inc = np.zeros((len(self.branches), len(self.buses)))
+            for k, name in enumerate(self.branches):
+                comp, idx = name.split(":", 1)
+                tab = n.lines if comp == "Line" else n.transformers
+                inc[k, bi[tab.at[idx, "bus0"]]] = 1.0
+                inc[k, bi[tab.at[idx, "bus1"]]] = -1.0
+            circ = np.array([(n.lines if name.startswith("Line:") else n.transformers)
+                             .at[name.split(":", 1)[1], "num_parallel"] for name in self.branches])
+            self._lodf, self._lodf_valid, self._phi = lodf_matrix(self.ptdf, inc, circ)
+        # only branches with both ends in Germany: cross-border elements carry fixed measured
+        # flows (A18) and their n-1 is handled by cross-border countertrading (not modelled)
+        n = self.grid.network
+        cty = n.buses.country
+        real = np.array([
+            ":EQ-" not in b and all(
+                cty.get((n.lines if b.startswith("Line:") else n.transformers)
+                        .at[b.split(":", 1)[1], end]) == "DE" for end in ("bus0", "bus1"))
+            for b in self.branches])
+        return Security(lodf=self._lodf, outages=self._lodf_valid & real, monitored=real,
+                        limit_pu=float(limit_pu), phi=self._phi)
+
     def simulate(self, ctx: Context, balancing: str = "keep_trade", **kw):
         return simulate(self.assets(), self.buses, self.ptdf, self.branches, self.s_nom,
                         self.grid.borders, ctx, balancing=balancing, gap_share=self.gap_share,

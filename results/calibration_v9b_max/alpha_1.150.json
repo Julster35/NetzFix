@@ -1,0 +1,55 @@
+{
+ "alpha": 1.15,
+ "rule": "cost_based",
+ "scenario": "v9_dlrmax.yaml",
+ "line_ratings": {
+  "lines_rated": 566,
+  "variant": "s_nom_jao_dlrmax",
+  "mva_osm": 1105911.714,
+  "mva_jao": 1241883.3428202013
+ },
+ "commit_at_run": "",
+ "seconds": 155.9,
+ "gwh": {
+  "up": 5061.143246048895,
+  "down_dispatchable": 3499.212420765241,
+  "down_curtail": 1680.000709939997,
+  "up_reserve": 118.0698846563447,
+  "up_plus_down": 10358.426261410477
+ },
+ "unresolved_gwh": 41.59548779110813,
+ "hours_unresolved": 976,
+ "selection_cost_meur": 1307.4036724194475,
+ "quarter_gwh": {
+  "1": 3134.424526417594,
+  "2": 563.6497371910435,
+  "3": 1017.3894824055159,
+  "4": 5642.962515396325
+ },
+ "curtail_by_carrier_gwh": {
+  "biomass": 96.38550964575671,
+  "hydro": 27.745693344534992,
+  "other_renewable": 6.446500978179325,
+  "solar": 49.0520239096358,
+  "wind_offshore": 97.1049340985441,
+  "wind_onshore": 1403.266047963346
+ },
+ "up_by_carrier_gwh": {
+  "gas": 1684.9931750580392,
+  "hard_coal": 1875.9300825821763,
+  "lignite": 55.36924123945454,
+  "other_conventional": 1444.850747169225
+ },
+ "down_disp_by_carrier_gwh": {
+  "gas": 1725.9421744653196,
+  "hard_coal": 413.9724761132643,
+  "lignite": 583.4489749064892,
+  "other_conventional": 775.8487952801682
+ },
+ "min_load_units": 394,
+ "reserve_units": {
+  "units": 36,
+  "mw": 3129.3,
+  "measured_units_kept_as_replay": 24
+ }
+}

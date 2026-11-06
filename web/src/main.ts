@@ -6,7 +6,7 @@ import { PathLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers";
 import { TripsLayer } from "@deck.gl/geo-layers";
 
 // ------------------------------------------------------------------ types
-type Branch = { i: number; id: string; kind: string; v: number; s_nom: number; path: [number, number][]; equivalent?: boolean };
+type Branch = { i: number; id: string; kind: string; v: number; s_nom: number; s_nom_max?: number | null; s_nom_tso?: number | null; path: [number, number][]; equivalent?: boolean };
 type Bus = { i: number; id: string; lon: number; lat: number; v: number; virtual?: boolean };
 type Border = { border_id: string; bus: string; country: string; capacity_mw: number; kind: string; inject_bus?: string };
 type Behaviour = { type: string; [k: string]: unknown; modifiers?: Record<string, unknown>[] };
@@ -391,18 +391,21 @@ function bindForm(busId: string) {
 function openBranch(i: number) {
   selected = { type: "branch", i };
   const b = grid.branches[i];
+  const wmax = b.s_nom_max && b.s_nom_max > b.s_nom + 0.5 ? b.s_nom_max / b.s_nom : null;
   $("right-body").innerHTML = `<h3>${b.kind}</h3><b>${b.id}</b><div class="muted">${b.v} kV · s_nom ${fmt(b.s_nom, 0)} MVA</div>
+    <div class="muted">${b.s_nom_tso ? `TSO rating (JAO): ${fmt(b.s_nom_tso, 0)} MVA` : "TSO rating: not matched"}${wmax ? ` · weather-adjusted max (TSO DLRmax): ${fmt(b.s_nom_max!, 0)} MVA = ${fmt(wmax * 100, 0)}% of the model's s_nom` : ""}</div>
     <h3>Loading over the run</h3><canvas id="spark" style="width:100%;height:140px"></canvas>
-    <div class="muted">dashed: 70% (n-1 proxy) and 100%</div>`;
+    <div class="muted">dashed: 70% (n-1 proxy) and 100%${wmax ? "; orange: weather-adjusted max" : ""}</div>`;
   $("right").classList.remove("hidden");
   if (!sim) return;
   const cv = $<HTMLCanvasElement>("spark");
   const w = (cv.width = cv.clientWidth * devicePixelRatio), h = (cv.height = 140 * devicePixelRatio);
   const g = cv.getContext("2d")!;
   const vals = Array.from({ length: sim.T }, (_, t) => Math.abs(sim!.flow[t * sim!.n_branches + i]) / b.s_nom);
-  const ymax = Math.max(1.1, ...vals);
+  const ymax = Math.max(1.1, wmax ? wmax * 1.05 : 0, ...vals);
   const X = (t: number) => (t / Math.max(1, sim!.T - 1)) * w, Y = (v: number) => h - (v / ymax) * h;
   for (const ref of [0.7, 1]) { g.setLineDash([4, 4]); g.strokeStyle = "#8b98a8"; g.beginPath(); g.moveTo(0, Y(ref)); g.lineTo(w, Y(ref)); g.stroke(); }
+  if (wmax) { g.setLineDash([4, 4]); g.strokeStyle = "#ffb74d"; g.beginPath(); g.moveTo(0, Y(wmax)); g.lineTo(w, Y(wmax)); g.stroke(); }
   g.setLineDash([]); g.strokeStyle = "#4fc3f7"; g.lineWidth = 1.5 * devicePixelRatio; g.beginPath();
   vals.forEach((v, t) => g.lineTo(X(t), Y(v))); g.stroke();
 }

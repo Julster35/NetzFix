@@ -1,0 +1,6 @@
+# Out-of-sample year 2023 (pre-registration to follow in vault/project/Validation.md, step 4 of
+# 2026-11-06). Same model, 2023 inputs; nothing is re-fitted on 2023.
+run:
+  name: y2023
+  base_year: 2023
+  weather_year: 2023

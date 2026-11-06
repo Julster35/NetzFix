@@ -85,3 +85,4 @@ Catalog of every note, grouped by folder. Read this before searching. PDFs: `lit
 - [[2026-11-03 Julien project brief]] - This is the founding brief for NetzFix, pasted by Julien into the first Claude Code session on 2026-11-03 and frozen here verbatim.
 - [[TransnetBW 2021 Newsletter Rhein-Neckar Karlsruhe]] · [[TransnetBW 2025 Projektbroschuere Weinheim-Karlsruhe]] · [[TransnetBW 2023 Erlaeuterungsbericht UW Daxlanden]] - literature (2026-11-05): 220 kV corridor Mannheim-Karlsruhe in 2024
 - [[JAO Core Static Grid Model]] - data (2026-11-05): TSO line ratings (Imax) per circuit, Core region incl. all four German TSOs
+- [[BNetzA Overloaded Grid Elements]] - data (2026-11-06): the 20-25 most overloaded transmission elements per quarter (2023, Q1-Q2 2024), yardstick of T7

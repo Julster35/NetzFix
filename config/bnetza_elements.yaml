@@ -1,0 +1,151 @@
+# A36: BNetzA "Überlastete Netzelemente der ÜNB" -> substation chains for matching to model lines.
+# Source: data/processed/bnetza_overloaded_elements.csv (src/netzfix/data/bnetza_congestion.py),
+# vault/data/BNetzA Overloaded Grid Elements.md. Written 2026-11-06 from the published element
+# names only (no model output looked at). The published files lose umlauts (U+FFFD), so each
+# element is found by a key that ignores umlauts and the replacement character.
+#
+# Reading of the names (A36):
+# - "A - B - C" and "A-B-C": a chain of consecutive substation pairs (A-B, B-C).
+# - "Name (A-B-C, A-D)": the parenthesis lists the chains; the leading name is a label.
+# - "A - B/C": two pairs A-B and A-C. "X / Y" with spaces: two separate chains.
+# - "A/B" without a dash ("Borken/Gießen"): one pair A-B.
+# - Prefixes "Leitung", "Stromkreis", "Gebiet" and suffixes "(PL)", "(DE_PL)", "(FR)" are dropped.
+# Elements without named end points are excluded (`chains: []`, reason given).
+elements:
+  Doerpen:
+    names: ["Dörpen (Dörpen-Niederlangen-Meppen-Hanekenfähr)"]
+    chains: [[Dörpen, Niederlangen, Meppen, Hanekenfähr]]
+  Ovenstaedt-Bechterdissen:
+    names: ["Ovenstädt-Bechterdissen (Ovenstädt-Eickum-Bechterdissen)"]
+    chains: [[Ovenstädt, Eickum, Bechterdissen]]
+  Neuenhagen-Vierraden-Pasewalk:
+    names: ["Leitung Neuenhagen - Vierraden - Pasewalk"]
+    chains: [[Neuenhagen, Vierraden, Pasewalk]]
+  StHuelfe-Ganderkesee:
+    names: ["Leitung St. Huelfe - Ganderkesee"]
+    chains: [[St. Hülfe, Ganderkesee]]
+  Vierraden-Krajnik:
+    names: ["Vierraden - Krajnik (DE_PL)", "Vierraden - Krajnik (PL)"]
+    chains: [[Vierraden, Krajnik]]
+  Dollern-Sottrum:
+    names: ["Dollern-Sottrum"]
+    chains: [[Dollern, Sottrum]]
+  Landesbergen-Wechold-Sottrum:
+    names: ["Landesbergen (Landesbergen-Wechold-Sottrum)"]
+    chains: [[Landesbergen, Wechold, Sottrum]]
+  Wuergassen-Sandershausen-Bergshausen:
+    names: ["Stromkreis Würgassen - Sandershausen/ Bergshausen"]
+    chains: [[Würgassen, Sandershausen], [Würgassen, Bergshausen]]
+  Bergshausen-Borken:
+    names: ["Stromkreis Bergshausen - Borken"]
+    chains: [[Bergshausen, Borken]]
+  Grosskrotzenburg-Dettingen-Urberach:
+    names: ["Großkrotzenburg - Dettingen/Urberach"]
+    chains: [[Großkrotzenburg, Dettingen], [Großkrotzenburg, Urberach]]
+  Wahle-Stadorf:
+    names: ["Wahle - Stadorf"]
+    chains: [[Wahle, Stadorf]]
+  Grohnde-Voerden-Bergshausen:
+    names: ["Grohnde - Vörden - Bergshausen"]
+    chains: [[Grohnde, Vörden, Bergshausen]]
+  Dipperz-Grosskrotzenburg:
+    names: ["Dipperz - Großkrotzenburg"]
+    chains: [[Dipperz, Großkrotzenburg]]
+  Stadorf-Lueneburg-Kruemmel:
+    names: ["Stadorf - Lüneburg - Krümmel"]
+    chains: [[Stadorf, Lüneburg, Krümmel]]
+  Ensdorf-Vigy-Oberzier-Maasbracht:
+    names: ["Ensdorf - Vigy / Oberzier - Maasbracht", "Ensdorf - Vigy (FR) / Oberzier - Maasbracht",
+            "Ensdorf - Vigy / Oberzier - Maasbracht (DE_NL)"]
+    chains: [[Ensdorf, "@FR"], [Oberzier, Maasbracht]]   # Vigy: 400 kV, not in the OSM query
+  Mecklar-Dipperz:
+    names: ["Mecklar - Dipperz"]
+    chains: [[Mecklar, Dipperz]]
+  Wahle-Mecklar:
+    names: ["Leitung Wahle-Mecklar"]
+    chains: [[Wahle, Mecklar]]
+  Borken-Giessen:
+    names: ["Borken/Gießen"]
+    chains: [[Borken, Gießen]]
+  Emscherbruch-Mengede:
+    names: ["Stromkreis Emscherbruch - Mengede"]
+    chains: [[Emscherbruch, Mengede]]
+  Gronau-Hanekenfaehr:
+    names: ["Gronau-Hanekenfähr"]
+    chains: [[Gronau, Hanekenfähr]]
+  Bechterdissen-Guetersloh:
+    names: ["Stromkreis Bechterdissen - Gütersloh"]
+    chains: [[Bechterdissen, Gütersloh]]
+  Elbe-Weser-Leitung:
+    names: ["Elbe-Weser-Leitung"]
+    chains: []          # line name only; end points not stated in the table
+  Landesbergen-Ovenstaedt:
+    names: ["Stromkreis Landesbergen - Ovenstädt"]
+    chains: [[Landesbergen, Ovenstädt]]
+  Hagenwerder-Mikulowa:
+    names: ["Leitung Hagenwerder - Mikulowa", "Leitung Hagenwerder - Mikulowa (DE_PL)"]
+    chains: [[Hagenwerder, "@PL"]]   # Mikułowa: 400 kV, not in the OSM query
+  Helmstedt-Wolmirstedt:
+    names: ["Leitung Helmstedt - Wolmirstedt"]
+    chains: [[Helmstedt, Wolmirstedt]]
+  Oberbachern-Ottenhofen:
+    names: ["Stromkreis Oberbachern - Ottenhofen"]
+    chains: [[Oberbachern, Ottenhofen]]
+  Grafenrheinfeld-Stalldorf:
+    names: ["Grafenrheinfeld-Stalldorf"]
+    chains: [[Grafenrheinfeld, Stalldorf]]
+  Buerstadt-Pfungstadt-Hoheneck:
+    names: ["Bürstadt-Pfungstadt-Hoheneck"]
+    chains: [[Bürstadt, Pfungstadt, Hoheneck]]
+  Daxlanden:
+    names: ["Gebiet Daxlanden (Daxlanden-Maximiliansau-Goldgrund, Daxlanden-Weingarten)"]
+    chains: [[Daxlanden, Maximiliansau, Goldgrund], [Daxlanden, Weingarten]]
+  Altheim:
+    names: ["Altheim (Altheim-Sittling, Altheim-Simbach-Sankt Peter (AT))",
+            "Altheim (Altheim-Sittling, Altheim-Simbach-Sankt Peter) (DE_AT)"]
+    chains: [[Altheim, Sittling], [Altheim, Simbach, "@AT"]]   # Sankt Peter (AT) = border leg
+  Urberach-Daxlanden:
+    names: ["Urberach - Daxlanden"]
+    chains: [[Urberach, Daxlanden]]
+  Diele-Rhede-Doerpen:
+    names: ["Stromkreis Diele - Rhede - Dörpen"]
+    chains: [[Diele, Rhede, Dörpen]]
+  Tiengen-Beznau:
+    names: ["Tiengen - Beznau / Aare Ost"]
+    chains: [[Tiengen, Beznau]]   # "Aare Ost" is not a substation name we can place (A36)
+  Lambsheim-Weingarten:
+    names: ["Lambsheim-Weingarten"]
+    chains: [[Lambsheim, Weingarten]]
+  Bischofsheim-Pfungstadt:
+    names: ["Bischofsheim - Pfungstadt"]
+    chains: [[Bischofsheim, Pfungstadt]]
+  Mecklar-Vieselbach:
+    names: ["Leitung Mecklar - Vieselbach"]
+    chains: [[Mecklar, Vieselbach]]
+  Mecklar-Eisenach:
+    names: ["Leitung Mecklar - Eisenach"]
+    chains: [[Mecklar, Eisenach]]
+  Dollern-Ovenstaedt:
+    names: ["Dollern - Ovenstädt"]
+    chains: [[Dollern, Ovenstädt]]
+  Diele-Meeden:
+    names: ["Leitung Diele - Meeden"]
+    chains: [[Diele, Meeden]]
+  Grohnde-Wuergassen:
+    names: ["Grohnde - Würgassen"]
+    chains: [[Grohnde, Würgassen]]
+  Wilster-Audorf:
+    names: ["Stromkreis Wilster - Audorf"]
+    chains: [[Wilster, Audorf]]
+  Buettel-Wilster:
+    names: ["Leitung Büttel - Wilster"]
+    chains: [[Büttel, Wilster]]
+  Helmstedt-Wahle:
+    names: ["Helmstedt - Wahle"]
+    chains: [[Helmstedt, Wahle]]
+  Lauchstaedt-Vieselbach:
+    names: ["Leitung Lauchstädt - Vieselbach"]
+    chains: [[Lauchstädt, Vieselbach]]
+  Region-Mitte-Berlin:
+    names: ["Region Mitte (Berlin)"]
+    chains: []          # a region, no named end points

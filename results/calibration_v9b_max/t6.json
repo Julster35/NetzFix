@@ -1,0 +1,78 @@
+{
+ "alpha": 0.986,
+ "commit_at_run": "",
+ "real_selected_rows": 14678,
+ "real_total_gwh": 17653.606069999998,
+ "model_total_gwh": 24444.142601439373,
+ "model_unmapped_gwh": 74.27705799538484,
+ "monthly_gwh": {
+  "model": [
+   3405.8,
+   3053.7,
+   888.1,
+   431.0,
+   411.6,
+   336.7,
+   1145.5,
+   1223.2,
+   1282.8,
+   802.0,
+   3026.5,
+   8437.1
+  ],
+  "real": [
+   2632.4,
+   1512.6,
+   840.8,
+   846.6,
+   1673.1,
+   695.2,
+   458.7,
+   617.4,
+   1584.6,
+   1652.2,
+   2066.6,
+   3073.5
+  ]
+ },
+ "T6a_monthly_tvd": {
+  "value": 0.25299570396679777,
+  "max": 0.15,
+  "pass": false
+ },
+ "T6b_daily_spearman": {
+  "value": 0.41692740388956084,
+  "min": 0.5,
+  "pass": false
+ },
+ "T6c_tso_share": {
+  "by_tso": {
+   "50Hertz": {
+    "model_share": 0.09348599955525926,
+    "real_share": 0.16337460961594916,
+    "pass": true
+   },
+   "Amprion": {
+    "model_share": 0.2914644360851027,
+    "real_share": 0.2852772391108419,
+    "pass": true
+   },
+   "TenneT DE": {
+    "model_share": 0.3063144669546185,
+    "real_share": 0.426637936755547,
+    "pass": false
+   },
+   "TransnetBW": {
+    "model_share": 0.30873509740501964,
+    "real_share": 0.12471021451766201,
+    "pass": false
+   }
+  },
+  "pass": false
+ },
+ "T6d_offshore_share_of_res_down": {
+  "value": 0.5992709183444765,
+  "owp_gwh": 4183.23654,
+  "res_down_gwh": 6980.54321
+ }
+}

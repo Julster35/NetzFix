@@ -47,6 +47,7 @@ LENGTH_TOL = 0.30
 LENGTH_ABS_KM = 3.0
 NAME_LENGTH_FACTOR = 1.3      # both ends by name: path <= max(1.3 x JAO km, JAO km + 10)
 NAME_LENGTH_ABS_KM = 10.0
+SUBSTATION_STAMP = "20261105"   # pinned Overpass snapshot (v9 was built from it)
 COLS = ["name", "eic", "tso", "s1", "s2", "kv", "p1", "p2", "p3", "p4", "p5", "p6", "fixed",
         "dlrmin", "dlrmax", "R", "X", "B", "km"]
 
@@ -70,6 +71,8 @@ def circuits() -> pd.DataFrame:
     for c in ["kv", "p1", "p2", "p3", "p4", "p5", "p6", "fixed", "dlrmin", "dlrmax", "km"]:
         d[c] = pd.to_numeric(d[c], errors="coerce")
     d["imax_a"] = imax(d)
+    # A37: weather-dependent maximum (DLRmax) where given, else the A34 value
+    d["imax_max_a"] = np.fmax(d.imax_a, d.dlrmax.where(d.imax_a.notna()))
     d["v"] = np.where(d.kv >= 300, 380.0, 220.0)
     d["eic"] = d.eic.astype(str).str.strip()
     return d[d.kv.between(200, 420)].reset_index(drop=True)
@@ -100,11 +103,12 @@ def _norm(x: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", x).strip()
 
 
-def osm_substations() -> pd.DataFrame:
+def osm_substations(stamp: str | None = None) -> pd.DataFrame:
+    """Named OSM 220/380 kV substations; `stamp` (YYYYMMDD) pins a cached Overpass snapshot."""
     from netzfix.data.osm_line_tags import download_substations
 
     rows = []
-    for p in download_substations():
+    for p in (download_substations(stamp) if stamp else download_substations()):
         for e in json.loads(p.read_text(encoding="utf-8"))["elements"]:
             t = e.get("tags", {})
             c = e.get("center", e)
@@ -159,7 +163,7 @@ def build() -> pd.DataFrame:
         graphs[v] = G
     C = circuits()
     ends = map_ends()
-    subs = osm_substations()
+    subs = osm_substations(SUBSTATION_STAMP)
     rows, assign = [], {}
 
     def bus_set(name, lon, lat, v):
@@ -294,11 +298,13 @@ def build() -> pd.DataFrame:
         per = r.s_nom / circ
         if idx:
             s_m = float(sum(np.sqrt(3) * r.v * C.at[i, "imax_a"] / 1000.0 for i in idx))
+            s_x = float(sum(np.sqrt(3) * r.v * C.at[i, "imax_max_a"] / 1000.0 for i in idx))
             s_new = s_m + max(circ - len(idx), 0) * per
+            s_max = s_x + max(circ - len(idx), 0) * per
         else:
-            s_new = r.s_nom
+            s_new = s_max = r.s_nom
         out.append({"line": name, "v": r.v, "circuits_osm": circ, "n_matched": len(idx),
-                    "s_nom_osm": r.s_nom, "s_nom_jao": s_new,
+                    "s_nom_osm": r.s_nom, "s_nom_jao": s_new, "s_nom_jao_dlrmax": s_max,
                     "eic": ";".join(C.loc[idx, "eic"]) if idx else ""})
     rated = pd.DataFrame(out)
     rated.to_csv(OUT, index=False)

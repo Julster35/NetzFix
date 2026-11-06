@@ -1,0 +1,117 @@
+{
+ "target_gwh": 24565,
+ "grid": {
+  "0.85": {
+   "up_plus_down_gwh": 49321.30955739939,
+   "unresolved_gwh": 355.94652086839034
+  },
+  "0.9": {
+   "up_plus_down_gwh": 38522.643956571315,
+   "unresolved_gwh": 260.82916300925
+  },
+  "0.95": {
+   "up_plus_down_gwh": 29598.767787244855,
+   "unresolved_gwh": 191.7917801679332
+  },
+  "0.986": {
+   "up_plus_down_gwh": 24444.142601439373,
+   "unresolved_gwh": 152.8406817300852
+  },
+  "1.0": {
+   "up_plus_down_gwh": 22678.62016111878,
+   "unresolved_gwh": 139.4776736618003
+  },
+  "1.05": {
+   "up_plus_down_gwh": 17445.246283596174,
+   "unresolved_gwh": 98.03976981957143
+  },
+  "1.1": {
+   "up_plus_down_gwh": 13441.775509244177,
+   "unresolved_gwh": 65.19124820618644
+  },
+  "1.15": {
+   "up_plus_down_gwh": 10358.426261410477,
+   "unresolved_gwh": 41.59548779110813
+  },
+  "1.2": {
+   "up_plus_down_gwh": 8063.87849388232,
+   "unresolved_gwh": 28.226690304412852
+  },
+  "1.25": {
+   "up_plus_down_gwh": 6330.389505575832,
+   "unresolved_gwh": 21.819854747690787
+  },
+  "1.3": {
+   "up_plus_down_gwh": 4983.946198747463,
+   "unresolved_gwh": 18.61740193720394
+  }
+ },
+ "alpha_star": 0.9851559296376846,
+ "tested_alpha": 0.986,
+ "tests": {
+  "T0_calibration_volume": {
+   "model": 24444.142601439373,
+   "real": 24565
+  },
+  "T1_curtailment_total": {
+   "model": 3799.5865142824096,
+   "real": 9374,
+   "pass": false
+  },
+  "T2_curtailment_mix": {
+   "by_carrier": {
+    "wind_offshore": {
+     "model_share": 0.10671021329418473,
+     "real_share": 0.48869844670594537,
+     "pass": false
+    },
+    "wind_onshore": {
+     "model_share": 0.8335784743646476,
+     "real_share": 0.3625066952329941,
+     "pass": false
+    },
+    "solar": {
+     "model_share": 0.05971131234116767,
+     "real_share": 0.14879485806106052,
+     "pass": true
+    }
+   },
+   "pass": false
+  },
+  "T3_q4_share": {
+   "model": 0.5017823559056687,
+   "real": 0.34398099260823656,
+   "pass": false
+  },
+  "T4_up_top2": {
+   "model": [
+    [
+     "gas",
+     4629.444420646583
+    ],
+    [
+     "hard_coal",
+     4144.875571348937
+    ],
+    [
+     "other_conventional",
+     2664.1229468512142
+    ],
+    [
+     "lignite",
+     309.6513804760194
+    ]
+   ],
+   "real": [
+    "gas",
+    "hard_coal"
+   ],
+   "pass": true
+  },
+  "T5_res_share_of_down": {
+   "model": 0.3108790990328026,
+   "real": 0.648540196485402,
+   "pass": false
+  }
+ }
+}

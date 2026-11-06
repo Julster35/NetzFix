@@ -1,0 +1,62 @@
+element,pair,osm_a,osm_b,straight_km,path_km,n_branches,status
+Doerpen,Dörpen - Niederlangen,Dörpen West,Niederlangen,13.0,13.3,1.0,matched
+Doerpen,Niederlangen - Meppen,Niederlangen,Meppen,14.1,20.0,1.0,matched
+Doerpen,Meppen - Hanekenfähr,Meppen,Hanekenfähr,31.0,46.9,3.0,matched
+Ovenstaedt-Bechterdissen,Ovenstädt - Eickum,Schaltanlage Ovenstädt,Eickum,41.6,45.6,2.0,matched
+Ovenstaedt-Bechterdissen,Eickum - Bechterdissen,Eickum,Bechterdissen,13.2,15.0,2.0,matched
+Neuenhagen-Vierraden-Pasewalk,Neuenhagen - Vierraden,Umspannwerk Neuenhagen,Umspannwerk Vierraden,72.5,91.9,6.0,matched
+Neuenhagen-Vierraden-Pasewalk,Vierraden - Pasewalk,Umspannwerk Vierraden,Umspannwerk Pasewalk,48.0,64.6,4.0,matched
+StHuelfe-Ganderkesee,St. Hülfe - Ganderkesee,Station Sankt Hülfe,KÜA Ganderkesee Süd,44.9,55.6,3.0,matched
+Vierraden-Krajnik,Vierraden - Krajnik,Umspannwerk Vierraden,"Stacja elektroenergetyczna ""Krajnik"" 400/220 kV",17.6,25.6,2.0,matched
+Dollern-Sottrum,Dollern - Sottrum,Umspannwerk Dollern,Sottrum,50.4,52.5,7.0,matched
+Landesbergen-Wechold-Sottrum,Landesbergen - Wechold,Landesbergen,Wechold,35.0,44.6,1.0,matched
+Landesbergen-Wechold-Sottrum,Wechold - Sottrum,Wechold,Umspannwerk Sottrum,30.0,33.9,1.0,matched
+Wuergassen-Sandershausen-Bergshausen,Würgassen - Sandershausen,,,,,,substation not found: Würgassen
+Wuergassen-Sandershausen-Bergshausen,Würgassen - Bergshausen,,,,,,substation not found: Würgassen
+Bergshausen-Borken,Bergshausen - Borken,Umspannwerk Bergshausen 380kV,Borken 380kV,28.3,29.4,1.0,matched
+Grosskrotzenburg-Dettingen-Urberach,Großkrotzenburg - Dettingen,Großkrotzenburg,Umspannwerk Dettingen,3.3,4.2,1.0,matched
+Grosskrotzenburg-Dettingen-Urberach,Großkrotzenburg - Urberach,Großkrotzenburg,Umspannwerk Urberach,18.0,23.0,1.0,matched
+Wahle-Stadorf,Wahle - Stadorf,Wahle 380 kV,Stadorf,78.8,85.9,2.0,matched
+Grohnde-Voerden-Bergshausen,Grohnde - Vörden,Grohnde,Vörden,26.3,28.9,1.0,matched
+Grohnde-Voerden-Bergshausen,Vörden - Bergshausen,Vörden,Umspannwerk Bergshausen 380kV,64.7,84.6,3.0,matched
+Dipperz-Grosskrotzenburg,Dipperz - Großkrotzenburg,Dipperz,Großkrotzenburg,76.5,89.2,2.0,matched
+Stadorf-Lueneburg-Kruemmel,Stadorf - Lüneburg,Stadorf,Umspannwerk Lüneburg,25.1,25.5,2.0,matched
+Stadorf-Lueneburg-Kruemmel,Lüneburg - Krümmel,Umspannwerk Lüneburg,Umspannwerk Krümmel (TenneT),21.5,28.1,2.0,matched
+Ensdorf-Vigy-Oberzier-Maasbracht,Ensdorf - @FR,Umspannanlage Ensdorf,model buses FR,17.7,20.1,1.0,matched
+Ensdorf-Vigy-Oberzier-Maasbracht,Oberzier - Maasbracht,Station Oberzier,Vernieuwing hoogspanningsstation Maasbracht,48.6,54.6,2.0,matched
+Mecklar-Dipperz,Mecklar - Dipperz,Umspannwerk Mecklar 380kV,Dipperz,43.3,50.7,2.0,matched
+Wahle-Mecklar,Wahle - Mecklar,Wahle 380 kV,Umspannwerk Mecklar 380kV,158.1,217.2,9.0,matched
+Borken-Giessen,Borken - Gießen,Borken 380kV,Umspannwerk Gießen Nord,66.2,72.6,1.0,matched
+Emscherbruch-Mengede,Emscherbruch - Mengede,Emscherbruch,Station Mengede,12.7,14.8,1.0,matched
+Gronau-Hanekenfaehr,Gronau - Hanekenfähr,Station Gronau,Hanekenfähr,35.5,45.8,1.0,matched
+Bechterdissen-Guetersloh,Bechterdissen - Gütersloh,Bechterdissen,Station Gütersloh,21.7,26.5,1.0,matched
+Elbe-Weser-Leitung,,,,,,,no end points in name
+Landesbergen-Ovenstaedt,Landesbergen - Ovenstädt,Landesbergen,Schaltanlage Ovenstädt,19.6,25.8,2.0,matched
+Hagenwerder-Mikulowa,Hagenwerder - @PL,Umspannwerk Hagenwerder,model buses PL,12.1,14.9,2.0,matched
+Helmstedt-Wolmirstedt,Helmstedt - Wolmirstedt,Umspannwerk Helmstedt,Umspannwerk Wolmirstedt,44.2,48.4,2.0,matched
+Oberbachern-Ottenhofen,Oberbachern - Ottenhofen,Umspannwerk Oberbachern,Umspannwerk Ottenhofen,38.0,44.0,2.0,matched
+Grafenrheinfeld-Stalldorf,Grafenrheinfeld - Stalldorf,Grafenrheinfeld,Umspannwerk Stalldorf,48.1,54.1,1.0,matched
+Buerstadt-Pfungstadt-Hoheneck,Bürstadt - Pfungstadt,Station Bürstadt,Umspannanlage Pfungstadt,23.6,31.0,2.0,matched
+Buerstadt-Pfungstadt-Hoheneck,Pfungstadt - Hoheneck,Umspannanlage Pfungstadt,Amprion Umspannwerk Hoheneck,109.5,142.6,5.0,matched
+Daxlanden,Daxlanden - Maximiliansau,Karlsruhe-Daxlanden,Umspannwerk Maximiliansau,3.7,5.0,1.0,matched
+Daxlanden,Maximiliansau - Goldgrund,,,,,,substation not found: Goldgrund
+Daxlanden,Daxlanden - Weingarten,Karlsruhe-Daxlanden,Weingarten,27.6,32.3,4.0,matched
+Altheim,Altheim - Sittling,Umspannwerk Altheim,Umspannwerk Sittling,42.1,45.7,1.0,matched
+Altheim,Altheim - Simbach,,,,,,substation not found: Simbach
+Altheim,Simbach - @AT,,,,,,substation not found: Simbach
+Urberach-Daxlanden,Urberach - Daxlanden,Umspannwerk Urberach,Karlsruhe-Daxlanden,112.4,147.8,12.0,matched
+Diele-Rhede-Doerpen,Diele - Rhede,Diele,Rhede,11.7,13.1,1.0,matched
+Diele-Rhede-Doerpen,Rhede - Dörpen,Rhede,Dörpen West,5.1,5.3,1.0,matched
+Tiengen-Beznau,Tiengen - Beznau,Umspannwerk Tiengen,Unterwerk Beznau,8.9,10.0,1.0,matched
+Lambsheim-Weingarten,Lambsheim - Weingarten,Umspannanlage Lambsheim,Weingarten,29.7,33.5,2.0,matched
+Bischofsheim-Pfungstadt,Bischofsheim - Pfungstadt,Umspannstation Bischofsheim,Umspannanlage Pfungstadt,23.4,25.5,2.0,matched
+Mecklar-Vieselbach,Mecklar - Vieselbach,Umspannwerk Mecklar 380kV,Umspannwerk Vieselbach,96.8,129.7,1.0,matched
+Mecklar-Eisenach,Mecklar - Eisenach,Umspannwerk Mecklar 380kV,Umspannwerk Eisenach,45.8,58.2,1.0,matched
+Dollern-Ovenstaedt,Dollern - Ovenstädt,Umspannwerk Dollern,Schaltanlage Ovenstädt,132.3,141.0,12.0,matched
+Diele-Meeden,Diele - Meeden,Diele,220 kV Meeden,24.4,26.7,2.0,matched
+Grohnde-Wuergassen,Grohnde - Würgassen,,,,,,substation not found: Würgassen
+Wilster-Audorf,Wilster - Audorf,NordLink HVDC Wilster,Audorf Süd,47.9,50.8,1.0,matched
+Buettel-Wilster,Büttel - Wilster,Umspannwerk Büttel,NordLink HVDC Wilster,7.2,9.8,2.0,matched
+Helmstedt-Wahle,Helmstedt - Wahle,Umspannwerk Helmstedt,Wahle 380 kV,44.1,62.4,4.0,matched
+Lauchstaedt-Vieselbach,Lauchstädt - Vieselbach,Umspannwerk Lauchstädt,Umspannwerk Vieselbach,70.5,77.8,2.0,matched
+Region-Mitte-Berlin,,,,,,,no end points in name

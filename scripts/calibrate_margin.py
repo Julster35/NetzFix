@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import time
 from pathlib import Path
@@ -36,24 +37,34 @@ def main() -> None:
     ap.add_argument("--alpha", type=float, required=True)
     ap.add_argument("--out", default=str(RESULTS / "calibration"))
     ap.add_argument("--rule", choices=("cost_based", "min_volume"), default=None)
+    ap.add_argument("--n1", type=float, default=None,
+                    help="A38: enforce n-1 with this post-fault limit (share of s_nom)")
+    ap.add_argument("--hours", type=int, default=None, help="smoke test: first N hours only")
     a = ap.parse_args()
     rcfg = load_config()["redispatch"]
     rule = a.rule or rcfg["rule"]
     t0 = time.time()
     pg = Playground()
+    if a.hours:
+        pg.ts = pg.ts.iloc[: a.hours]
     ctx = Context(ts=pg.ts, capacity=pg.capacity, regional_cf=pg.regional_cf)
     r = pg.simulate(ctx, track_carriers=True)
     costs = CostRule.from_config(pg.ts.index, rcfg["prices"]) if rule == "cost_based" else None
     down = r.down_bus if r.down_bus is not None else r.disp_bus     # A31 minimum load
     reserve = r.reserve_bus if (r.reserve_bus is not None and r.reserve_bus.any()) else None
     rd = redispatch(r.flow, pg.ptdf, pg.s_nom, r.headroom_bus, down, r.res_bus,
-                    limit_pu=a.alpha, costs=costs, reserve=reserve)
+                    limit_pu=a.alpha, costs=costs, reserve=reserve,
+                    security=pg.security(a.n1) if a.n1 else None)
     ur = rd.up_reserve if rd.up_reserve is not None else np.zeros_like(rd.up)
     q = pg.ts.index.tz_convert("Europe/Berlin").quarter.to_numpy()
     tot = (rd.up + ur + rd.down_disp + rd.down_res).sum(axis=1)
     out = {
         "alpha": a.alpha,
         "rule": rule,
+        "scenario": os.environ.get("NETZFIX_SCENARIO") or "default",
+        "n1_post_fault_limit": a.n1,
+        "hours": a.hours or len(pg.ts),
+        "line_ratings": pg.line_ratings,
         "commit_at_run": subprocess.run(["git", "rev-parse", "--short", "HEAD"],
                                         capture_output=True, text=True).stdout.strip(),
         "seconds": round(time.time() - t0, 1),
@@ -74,7 +85,10 @@ def main() -> None:
     }
     d = Path(a.out)
     d.mkdir(parents=True, exist_ok=True)
-    (d / f"alpha_{a.alpha:.3f}.json").write_text(json.dumps(out, indent=1), encoding="utf-8")
+    stem = f"n1_{a.n1:.3f}_base_{a.alpha:.3f}" if a.n1 else f"alpha_{a.alpha:.3f}"
+    if a.hours:
+        stem += f"_smoke{a.hours}h"
+    (d / f"{stem}.json").write_text(json.dumps(out, indent=1), encoding="utf-8")
     print(json.dumps(out, indent=1))
 
 

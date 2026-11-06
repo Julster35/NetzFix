@@ -1,0 +1,44 @@
+{
+ "year": 2024,
+ "hours": 8784,
+ "commit_at_run": "9fb9151",
+ "units": 1242,
+ "fleet_mw_by_technology": {
+  "gas_cc": 10722.853,
+  "gas_gt": 14080.639166666668,
+  "gas_st": 7763.501333333332,
+  "hard_coal_sub": 11728.658166666666,
+  "hard_coal_super": 4926.0,
+  "lignite": 15754.93525
+ },
+ "V1": {
+  "pearson_r": 0.48149534129967053,
+  "pass_r": false,
+  "mean_model": 75.60671086549883,
+  "mean_real": 78.51203324225865,
+  "pass_mean": true,
+  "mae": 30.997255678553536,
+  "pearson_r_real_price_positive": 0.5116951909064653,
+  "hours_compared": 8784,
+  "real_hours_price_le_0": 519
+ },
+ "V2": {
+  "lignite": {
+   "model_twh": 98.634497113,
+   "real_twh": 70.98635425,
+   "pass": false
+  },
+  "hard_coal": {
+   "model_twh": 47.179480803999994,
+   "real_twh": 27.33631875,
+   "pass": false
+  },
+  "gas": {
+   "model_twh": 9.425176332999985,
+   "real_twh": 56.91648125,
+   "pass": false
+  }
+ },
+ "shortfall_hours": 0,
+ "shortfall_gwh": 0.0
+}

@@ -6,6 +6,7 @@ override them key by key. Paths are built with ``pathlib`` so they work on Windo
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any
 
@@ -31,7 +32,14 @@ def _deep_update(base: dict[str, Any], override: dict[str, Any]) -> dict[str, An
 
 
 def load_config(scenario: str | Path | None = None) -> dict[str, Any]:
-    """Load the default config, optionally overridden by a scenario YAML file."""
+    """Load the default config, optionally overridden by a scenario YAML file.
+
+    Without an explicit `scenario`, the environment variable NETZFIX_SCENARIO (a file name in
+    config/scenarios/ or a path) selects one, so batch jobs can run a variant without editing
+    default.yaml.
+    """
+    if scenario is None:
+        scenario = os.environ.get("NETZFIX_SCENARIO") or None
     with open(CONFIG_DIR / "default.yaml", encoding="utf-8") as fh:
         cfg = yaml.safe_load(fh)
     if scenario is not None:

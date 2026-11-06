@@ -1,0 +1,213 @@
+{
+ "Doerpen": [
+  "Line:merged_way/184007156-380+1",
+  "Line:merged_way/33174242-380+1",
+  "Line:merged_way/37416561-380+1",
+  "Line:merged_way/61918209-380+1",
+  "Line:way/301953423-380"
+ ],
+ "Ovenstaedt-Bechterdissen": [
+  "Line:relation/1636863-380",
+  "Line:relation/1636864-380",
+  "Line:relation/1636865-380",
+  "Line:relation/1636866-380"
+ ],
+ "Neuenhagen-Vierraden-Pasewalk": [
+  "Line:relation/1141616:b-380",
+  "Line:relation/1141616:c-380",
+  "Line:relation/1141617:b-380",
+  "Line:relation/1141617:c-380",
+  "Line:relation/18499979-380",
+  "Line:relation/18499980-380",
+  "Line:relation/18508925-380",
+  "Line:relation/18508926-380",
+  "Line:way/1222462381-220",
+  "Transformer:virtual_relation/1141616:a:1-380-220"
+ ],
+ "StHuelfe-Ganderkesee": [
+  "Line:merged_way/997957650-380+7",
+  "Line:way/1002012655-380",
+  "Line:way/33812091-380"
+ ],
+ "Vierraden-Krajnik": [
+  "Line:relation/1188569-400",
+  "Line:relation/2239286-400"
+ ],
+ "Dollern-Sottrum": [
+  "Line:relation/5497488:a-380",
+  "Line:relation/5497488:b-380",
+  "Line:relation/5497488:c-380",
+  "Line:relation/5497490:a-380",
+  "Line:relation/5497490:b-380",
+  "Line:relation/5497490:c-380",
+  "Line:way/1186186271-380"
+ ],
+ "Landesbergen-Wechold-Sottrum": [
+  "Line:merged_way/118351425-220+2",
+  "Line:way/231735886-220"
+ ],
+ "Bergshausen-Borken": [
+  "Line:relation/3687803:b-380"
+ ],
+ "Grosskrotzenburg-Dettingen-Urberach": [
+  "Line:relation/1641757-380",
+  "Line:relation/1641761:b-380"
+ ],
+ "Wahle-Stadorf": [
+  "Line:relation/3534540-380",
+  "Line:relation/3534541-380"
+ ],
+ "Grohnde-Voerden-Bergshausen": [
+  "Line:merged_way/156960648-380+3",
+  "Line:merged_way/290703850-380+3",
+  "Line:way/148474410-380",
+  "Line:way/196670169-380"
+ ],
+ "Dipperz-Grosskrotzenburg": [
+  "Line:relation/12819661-380",
+  "Line:relation/3688562-380"
+ ],
+ "Stadorf-Lueneburg-Kruemmel": [
+  "Line:relation/114789-380",
+  "Line:relation/3534542-380",
+  "Line:relation/6463658-380",
+  "Line:relation/67585-380"
+ ],
+ "Ensdorf-Vigy-Oberzier-Maasbracht": [
+  "Line:merged_way/29291584-380+4",
+  "Line:merged_way/80130019-380+3",
+  "Line:relation/3756991-220"
+ ],
+ "Mecklar-Dipperz": [
+  "Line:relation/12819660-380",
+  "Line:relation/3688563-380"
+ ],
+ "Wahle-Mecklar": [
+  "Line:merged_way/574218866-380+6",
+  "Line:merged_way/574577676-380+8",
+  "Line:merged_way/574577691-380+2",
+  "Line:merged_way/953738997-380+2",
+  "Line:relation/12544904:a-380",
+  "Line:relation/12544904:b-380",
+  "Line:relation/12825581-380",
+  "Line:way/953757607-380",
+  "Line:way/953757609-380"
+ ],
+ "Borken-Giessen": [
+  "Line:merged_way/169116881-380+9"
+ ],
+ "Emscherbruch-Mengede": [
+  "Line:merged_way/284965427-380+5"
+ ],
+ "Gronau-Hanekenfaehr": [
+  "Line:merged_way/60261709-380+1"
+ ],
+ "Bechterdissen-Guetersloh": [
+  "Line:relation/4430965:b-380"
+ ],
+ "Landesbergen-Ovenstaedt": [
+  "Line:way/167609849-380",
+  "Line:way/24604796:a-380"
+ ],
+ "Hagenwerder-Mikulowa": [
+  "Line:relation/3730417-380",
+  "Line:relation/3730418-380"
+ ],
+ "Helmstedt-Wolmirstedt": [
+  "Line:relation/14435819-380",
+  "Line:relation/3883858-380"
+ ],
+ "Oberbachern-Ottenhofen": [
+  "Line:merged_relation/69489:a-380+1",
+  "Line:relation/112804-380"
+ ],
+ "Grafenrheinfeld-Stalldorf": [
+  "Line:relation/3694018-380"
+ ],
+ "Buerstadt-Pfungstadt-Hoheneck": [
+  "Line:relation/14596023-380",
+  "Line:relation/14596024-380",
+  "Line:relation/1636729:a-380",
+  "Line:way/41981221-380",
+  "Line:way/56234522-380"
+ ],
+ "Daxlanden": [
+  "Line:merged_relation/14650605:b-220+1",
+  "Line:relation/14514196:b-380",
+  "Line:relation/1638848:b-380",
+  "Transformer:way/1467276102-380-220"
+ ],
+ "Altheim": [
+  "Line:relation/3749845-220"
+ ],
+ "Urberach-Daxlanden": [
+  "Line:merged_way/27275258:a-220+3",
+  "Line:merged_way/277828184-380+1",
+  "Line:merged_way/560384836-220+3",
+  "Line:merged_way/8762976-380+1",
+  "Line:relation/14596023-380",
+  "Line:relation/14596024-380",
+  "Line:way/169240672-380",
+  "Line:way/26186272-220",
+  "Line:way/27275258:b-220",
+  "Line:way/41981221-380",
+  "Line:way/56234522-380",
+  "Transformer:way/152973139-380-220"
+ ],
+ "Diele-Rhede-Doerpen": [
+  "Line:way/31742764-380",
+  "Line:way/61910372-380"
+ ],
+ "Tiengen-Beznau": [
+  "Line:merged_way/195538144-220+4"
+ ],
+ "Lambsheim-Weingarten": [
+  "Line:merged_way/152924493-220+2",
+  "Line:merged_way/39076066-220+2"
+ ],
+ "Bischofsheim-Pfungstadt": [
+  "Line:way/169240672-380",
+  "Line:way/24686637-380"
+ ],
+ "Mecklar-Vieselbach": [
+  "Line:relation/129420-380"
+ ],
+ "Mecklar-Eisenach": [
+  "Line:relation/270536-380"
+ ],
+ "Dollern-Ovenstaedt": [
+  "Line:merged_way/1359558142-380+1",
+  "Line:merged_way/231735880-380+2",
+  "Line:relation/5497488:a-380",
+  "Line:relation/5497488:b-380",
+  "Line:relation/5497488:c-380",
+  "Line:relation/5497490:a-380",
+  "Line:relation/5497490:b-380",
+  "Line:relation/5497490:c-380",
+  "Line:way/1186186271-380",
+  "Line:way/1359558141-380",
+  "Line:way/1359558143-380",
+  "Line:way/24604796:a-380"
+ ],
+ "Diele-Meeden": [
+  "Line:relation/1637163-380",
+  "Line:relation/9981859-380"
+ ],
+ "Wilster-Audorf": [
+  "Line:relation/3885012:a-380"
+ ],
+ "Buettel-Wilster": [
+  "Line:relation/6771820-380",
+  "Line:relation/6771821-380"
+ ],
+ "Helmstedt-Wahle": [
+  "Line:relation/3528700-380",
+  "Line:relation/3883856-380",
+  "Line:relation/5207092-380",
+  "Line:relation/71281-380"
+ ],
+ "Lauchstaedt-Vieselbach": [
+  "Line:relation/3742241-380",
+  "Line:relation/3742242-380"
+ ]
+}

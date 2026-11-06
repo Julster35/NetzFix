@@ -28,6 +28,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import numpy as np
+import scipy.sparse as sp
 from scipy.optimize import linprog
 
 PENALTY = 1e4          # min_volume rule (v0-v2, unchanged)
@@ -81,28 +82,95 @@ class Redispatch:
         return {"up": up, "down_dispatchable": dd, "down_curtail": dr, "up_plus_down": up + dd + dr}
 
 
-def _solve_hour(f0, P, L, caps, weights, signs, penalty=PENALTY, max_iter=25):
+def lodf_matrix(ptdf: np.ndarray, incidence: np.ndarray, circuits: np.ndarray | None = None,
+                tol: float = 1e-6):
+    """Outage distribution factors for losing ONE circuit of each branch (n-1), the share of the
+    branch that trips (phi = 1 / circuits) and the mask of outages that do not split the grid.
+
+    M = PTDF @ incidence.T: flow on l per MW moved from bus0(k) to bus1(k). The tripped circuit
+    carried phi * f_k; with d = 1 - phi * M[k, k]:
+      other branch l:     f_l' = f_l + phi * M[l, k] / d * f_k
+      branch k (rest):    f_k' = f_k * (1 - phi) / d,  limit (1 - phi) * limit_k
+    i.e. LODF[l, k] = phi * M[l, k] / d and LODF[k, k] = (1 - phi) / d - 1. With one circuit
+    (phi = 1) this is the textbook LODF (LODF[k, k] = -1). Outages with d ~ 0 split the grid
+    (a single-circuit bridge) and are marked invalid.
+    """
+    nbr = ptdf.shape[0]
+    phi = np.ones(nbr) if circuits is None else 1.0 / np.maximum(np.round(circuits), 1.0)
+    M = ptdf @ incidence.T
+    d = 1.0 - phi * np.diag(M)
+    valid = np.abs(d) > tol
+    L = np.zeros_like(M)
+    L[:, valid] = M[:, valid] * (phi[valid] / d[valid])[None, :]
+    v = np.flatnonzero(valid)
+    L[v, v] = (1.0 - phi[v]) / d[v] - 1.0
+    return L, valid, phi
+
+
+@dataclass
+class Security:
+    """n-1 security for redispatch (A38). After the loss of one circuit of any branch k in
+    `outages`, every monitored branch stays within limit_pu * s_nom (post-fault limit; may
+    differ from the base limit); the rest of branch k within (1 - phi_k) of that."""
+    lodf: np.ndarray            # branches x branches (one-circuit outage)
+    outages: np.ndarray         # bool, branches that may lose a circuit (without splitting)
+    monitored: np.ndarray       # bool, branches whose post-fault flow is limited
+    limit_pu: float
+    phi: np.ndarray | None = None   # share of branch k that trips (1 / circuits); None = 1
+
+    def lim(self, Lc: np.ndarray, m: int, k: int) -> float:
+        if m == k and self.phi is not None:
+            return float((1.0 - self.phi[k]) * Lc[m])
+        return float(Lc[m])
+
+
+def _cont_violations(f, sec: Security, Lc, tol):
+    """(l, k) pairs whose post-fault flow exceeds the limit, given base flows f: per monitored
+    branch l only the worst outage k (the lazy loop adds the next one if it is still violated)."""
+    K = np.flatnonzero(sec.outages)
+    if K.size == 0:
+        return []
+    lim = np.repeat(Lc[:, None], K.size, axis=1)
+    own = (K, np.arange(K.size))
+    lim[own] = Lc[K] * (1.0 - (sec.phi[K] if sec.phi is not None else 1.0))
+    F = np.abs(f[:, None] + sec.lodf[:, K] * f[None, K]) - lim
+    F[~sec.monitored] = -np.inf
+    if sec.phi is None:
+        F[own] = -np.inf
+    else:
+        F[own] = np.where(sec.phi[K] >= 1.0, -np.inf, F[own])
+    j = np.argmax(F, axis=1)
+    worst = F[np.arange(F.shape[0]), j]
+    ls = np.flatnonzero(worst > tol)
+    return list(zip(ls.tolist(), K[j[ls]].tolist(), strict=True))
+
+
+def _solve_hour(f0, P, L, caps, weights, signs, penalty=PENALTY, max_iter=25,
+                sec: Security | None = None, Lc=None):
     """One hour. Blocks b (each nb variables): cap[b] bounds, weight[b] cost, sign[b] +1 for
     injection increase (up, reserve up), -1 for decrease (conventional down, curtailment).
-    Balance: sum over blocks of sign * x = 0."""
+    Balance: sum over blocks of sign * x = 0. Constraint rows are added lazily: base rows
+    (branch k) and, with `sec`, post-fault rows (branch l after outage of k)."""
     nb = len(caps[0])
     nbl = len(caps)
-    k_set: list[int] = list(np.flatnonzero(np.abs(f0) > L + 1e-6))
+    base: list[int] = list(np.flatnonzero(np.abs(f0) > L + 1e-6))
+    cont: list[tuple[int, int]] = _cont_violations(f0, sec, Lc, 1e-6) if sec is not None else []
     x = np.zeros(nbl * nb)
     slack_total = 0.0
     for _ in range(max_iter):
-        if not k_set:
+        if not base and not cont:
             return x, 0.0
-        K = np.array(k_set)
-        nk = len(K)
+        S = [P[k] for k in base] + [P[m] + sec.lodf[m, k] * P[k] for m, k in cont]
+        fr = [f0[k] for k in base] + [f0[m] + sec.lodf[m, k] * f0[k] for m, k in cont]
+        lim = [L[k] for k in base] + [sec.lim(Lc, m, k) for m, k in cont]
+        S, fr, lim = np.asarray(S), np.asarray(fr), np.asarray(lim)
+        nk = len(fr)
         c = np.r_[np.concatenate([np.full(nb, w) for w in weights]), np.full(2 * nk, penalty)]
-        Pk = P[K]
-        A_flow = np.hstack([sg * Pk for sg in signs])
-        A_ub = np.vstack([
-            np.hstack([A_flow, -np.eye(nk), np.zeros((nk, nk))]),
-            np.hstack([-A_flow, np.zeros((nk, nk)), -np.eye(nk)]),
-        ])
-        b_ub = np.r_[L[K] - f0[K], L[K] + f0[K]]
+        A_flow = sp.csr_array(np.hstack([sg * S for sg in signs]))
+        eye, zero = sp.eye_array(nk, format="csr"), sp.csr_array((nk, nk))
+        A_ub = sp.vstack([sp.hstack([A_flow, -eye, zero]),
+                          sp.hstack([-A_flow, zero, -eye])], format="csr")
+        b_ub = np.r_[lim - fr, lim + fr]
         A_eq = np.r_[np.concatenate([np.full(nb, float(sg)) for sg in signs]),
                      np.zeros(2 * nk)][None, :]
         bounds = [(0, v) for cap in caps for v in cap] + [(0, None)] * (2 * nk)
@@ -114,18 +182,24 @@ def _solve_hour(f0, P, L, caps, weights, signs, penalty=PENALTY, max_iter=25):
         slack_total = float(res.x[nbl * nb:].sum())
         delta = sum(sg * x[b * nb:(b + 1) * nb] for b, sg in enumerate(signs))
         f = f0 + P @ delta
-        new = [k for k in np.flatnonzero(np.abs(f) > L + 1e-3) if k not in set(k_set)]
-        if not new:
+        have_b, have_c = set(base), set(cont)
+        new_b = [k for k in np.flatnonzero(np.abs(f) > L + 1e-3) if k not in have_b]
+        new_c = ([lk for lk in _cont_violations(f, sec, Lc, 1e-3) if lk not in have_c]
+                 if sec is not None else [])
+        if not new_b and not new_c:
             return x, slack_total
-        k_set += new
+        base += new_b
+        cont += new_c
     return x, slack_total
 
 
 def redispatch(flow0: np.ndarray, ptdf: np.ndarray, s_nom: np.ndarray, headroom: np.ndarray,
                disp: np.ndarray, res: np.ndarray, limit_pu: float = 1.0,
                res_weight: float = 1.0, costs: CostRule | None = None,
-               reserve: np.ndarray | None = None) -> Redispatch:
-    """`costs=None`: min_volume rule; otherwise the cost_based rule with these prices."""
+               reserve: np.ndarray | None = None,
+               security: Security | None = None) -> Redispatch:
+    """`costs=None`: min_volume rule; otherwise the cost_based rule with these prices.
+    `security`: also enforce n-1 post-fault limits (A38); None = base case only (v0-v9)."""
     T, nb = headroom.shape
     if costs is not None and (costs.c_up + costs.c_down <= 0).any():
         raise ValueError("c_up + c_down must be > 0, otherwise up/down loops are free")
@@ -137,8 +211,10 @@ def redispatch(flow0: np.ndarray, ptdf: np.ndarray, s_nom: np.ndarray, headroom:
         raise ValueError("grid-reserve units given but no reserve price (p_nr)")
     unresolved = np.zeros(T)
     flow = flow0.copy()
+    Lc = security.limit_pu * s_nom if security is not None else None
     for t in range(T):
-        if not (np.abs(flow0[t]) > L + 1e-6).any():
+        if not (np.abs(flow0[t]) > L + 1e-6).any() and (
+                security is None or not _cont_violations(flow0[t], security, Lc, 1e-6)):
             continue
         w = ((1.0, 1.0, res_weight) if costs is None
              else (costs.c_up[t], costs.c_down[t], costs.p_ee[t]))
@@ -150,7 +226,8 @@ def redispatch(flow0: np.ndarray, ptdf: np.ndarray, s_nom: np.ndarray, headroom:
             w = (*w, 1.0 if costs is None else costs.p_nr[t])
             signs.append(1)
         x, s = _solve_hour(flow0[t], ptdf, L, caps, list(w), signs,
-                           penalty=PENALTY if costs is None else PENALTY_COST)
+                           penalty=PENALTY if costs is None else PENALTY_COST,
+                           sec=security, Lc=Lc)
         up[t], dd[t], dr[t] = x[:nb], x[nb:2 * nb], x[2 * nb:3 * nb]
         if reserve is not None:
             ur[t] = x[3 * nb:4 * nb]

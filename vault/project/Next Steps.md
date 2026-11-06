@@ -8,19 +8,19 @@ ai-first: true
 # Next Steps
 
 ## For future agent
-Ordered actions as of 2026-11-05, end of session. Model default = **v8** (cost rule, min load, grid reserve, margin 0.997; T1/T4/T5 pass, T2/T3 fail). New yardstick **T6** (TSO redispatch measures 2024, netztransparenz) fails on v8: monthly shape, daily timing and TSO split (TransnetBW 23.8% vs 12.5%). **v9** (TSO line ratings from JAO, A34, + stated connection kV, A35) gives 34.5 TWh even at 100% of rating, i.e. no calibrated margin. Agreed plan (Julien, 2026-11-05): add the operators' relief measures as separate pre-registered versions, PSTs first, then weather-dependent ratings, then CHP must-run. The market model (step 3) and A/B/C wait until validation is accepted by Julien.
+Ordered actions as of 2026-11-06 (resume block below supersedes the 2026-11-05 list). Model default = **v8** (cost rule, min load, grid reserve, margin 0.997; T1/T4/T5 pass, T2/T3 fail). New yardstick **T6** (TSO redispatch measures 2024, netztransparenz) fails on v8: monthly shape, daily timing and TSO split (TransnetBW 23.8% vs 12.5%). **v9** (TSO line ratings from JAO, A34, + stated connection kV, A35) gives 34.5 TWh even at 100% of rating, i.e. no calibrated margin. Agreed plan (Julien, 2026-11-05): add the operators' relief measures as separate pre-registered versions, PSTs first, then weather-dependent ratings, then CHP must-run. The market model (step 3) and A/B/C wait until validation is accepted by Julien.
 
-> [!todo] Resume here (2026-11-06)
+> [!todo] Resume here (after 2026-11-06)
 > **Claude, in order:**
-> 1. **v10 = v9 + phase-shifting transformers.** Data: JAO Core SGM sheets Transformers (PST angle / phase regulation) and Remedial Actions ([[JAO Core Static Grid Model]]). Match German PSTs to OSM transformers; add PST angle variables to the redispatch LP (cost-free, before plants); **toy-network test with a hand-computed answer first** (CLAUDE.md). Pre-register in [[Validation]], then grid + alpha* + T1-T6 on the chair server.
-> 2. **v11 = v10 + weather-dependent line ratings** (between DLRmin and DLRmax, hourly from ERA5 temperature/wind). **Blocked on a held source:** IEEE 738 or CIGRE TB 601 (paywalled) - Julien to check JMU library access; otherwise look for an open-access paper stating the heat balance in full. No formula without a held PDF.
-> 3. **v12 = CHP must-run** (A33, code ready, `chp_must_run.enabled`).
-> 4. **T2 offshore:** held source on how TSOs curtail offshore (TenneT direct control vs Redispatch 2.0). Real data now show offshore connection points carry 59.9% of RES curtailment (T6d).
-> 5. Licence of the netztransparenz redispatch CSV (not stated on the page) - check before publishing anything derived.
+> 1. **v10-n1 result** (job 6913, α_c 1.1-2.0, `results/calibration_v10_n1/` on the server): copy, interpolate α_c\*, run `jobs/tests.sh` (T1-T7) at α_c\* with `--n1` (needs a `N1` passthrough in tests.sh), write RESULT in [[Validation]].
+> 2. **OOS-2023** (pre-registered): year-parametrise input paths (state.py, assets.py, weather_profiles.py, entsoe_units.py; check v8 α 0.997 still gives 24,462 GWh), build 2023 assets + regional profiles (ERA5 job 6916), compute the 2023 countertrade volume and target, then run every candidate on the server.
+> 3. **Market v2:** CHP must-run (A33) as lower bound, renewables bidding at market-premium level (negative prices), storage; then feed market dispatch into flows (design A end to end).
+> 4. Soft post-fault slack (Julien's idea): only with a sourced price for post-fault overload.
+> 5. v10 phase shifters (JAO), v11 weather-dependent hourly ratings (needs IEEE 738/CIGRE PDF), v12 CHP must-run.
 >
-> **Julien:** IEEE 738 / CIGRE TB 601 via the library; coal price A29 (8.3 €/MWh_th inferred) acceptable or a data subscription at the chair.
+> **Julien:** ENTSO-E File Library login for 2023 per-unit output (A26 replay for OOS-2023); ask the colleague what the 120% refers to and which "pricing of overloading" data he meant; commit when happy.
 >
-> Done 2026-11-05: v8 evaluated + default; UI on v8 call; netztransparenz data + T6; GKM = 220 kV (TransnetBW PDFs); JAO SGM held; v9 built, run (job 5966), no alpha*.
+> Done 2026-11-06: T7 (BNetzA bottleneck lists) fails on v8; v9b α\* 1.069 / 0.986 (volume explained by ratings, pattern worse); n-1 (A38) built + tested, grid running; market v1 fails V1 r / V2; OOS-2023 pre-registered; twin shows TSO and weather-adjusted max ratings.
 
 ## Open problems from calibration v2 (2026-11-03)
 1. **T2 curtailment mix fails** (offshore 6.8% vs 48.9% real). Rebuilt landing points did not help ([[Offshore Connections]]). Likely cause: our minimum-volume redispatch picks onshore wind near the bottleneck, while real operators follow the cost / priority order of § 13a EnWG with minimum factors for renewables (`medium`). → redispatch rule with priority weights (needs O1 decision; the weights must come from a held source, not invented).

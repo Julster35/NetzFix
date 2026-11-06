@@ -1,0 +1,7 @@
+# Calibration v9b-max (pre-registered 2026-11-06): as v9, but each matched circuit is rated at
+# its weather-dependent maximum DLRmax where the JAO model gives one (A37), else as A34.
+line_ratings:
+  source: jao
+  variant: dlrmax
+connection_kv:
+  enabled: true

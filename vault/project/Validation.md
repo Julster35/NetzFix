@@ -309,3 +309,118 @@ Julien (2026-11-05): "ok then do 1 and 2", "yes look for it" (TSO static grid mo
 - Descriptive, at the grid point 1.00 (not a test): up 16,534 + reserve 717; curtailment 8,422 (real 9,374; v8 6,086); conventional down 8,829 (real 5,080; v8 5,954); Q4 share 51.3% (v8 55.0%); selection cost 5,993 M€.
 - **Reading:** with the TSOs' own ratings (Imax = Fixed / DLRmin / lowest season), the model network is tighter than with the OSM defaults, although the total rated MVA rose 4.9%: the binding lines got lower ratings on balance. Even at 100% of rating the model needs 40% more redispatch than 2024. Candidate reasons (`medium`, untested): (1) **DLRmin is the lower band** of temperature-dependent ratings; redispatch peaks in cold, windy winter hours when DLR is near its upper band; (2) operational measures absent from the model: phase-shifting transformers (listed in the JAO "Remedial Actions" sheet), topology switching, curative redispatch (temporary post-fault overload); (3) 177 circuits without a usable Imax keep OSM defaults (mostly Amprion).
 - **Status:** v8 stays the model default (v9 has no calibrated margin). `line_ratings.source` and `connection_kv.enabled` were switched on for this run and are set back to the v8 values (osm / false) in `config/default.yaml` after it (2026-11-05), so the default stays v8.
+
+### 2026-11-06 - T7 (where is the grid congested? BNetzA overloaded elements): PRE-REGISTRATION (before any model flow for T7 is computed)
+Julien (2026-11-06): "can you check for the line loading and bottlenecks how close we are here?", "maybe look for 2023", "yes do 1-4 for me" (1 = find the real list, 2 = model bottleneck list, 3 = pre-register, 4 = run).
+- **Data (real, R):** BNetzA tables "Überlastete Netzelemente der ÜNB" (element name, control area, hours of overload "auf Basis des PRD1 Betriebsplanungsprozesses", top 20-25 per quarter): quarterly reports Q1-Q4 2023 (PDF) and SMARD xlsx for Q1 and Q2 2024; downloaded 2026-11-06 by `src/netzfix/data/bnetza_congestion.py` (6 MANIFEST rows), parsed to `data/processed/bnetza_overloaded_elements.csv` (155 rows). **No Q3/Q4 2024 table was found** (SMARD articles for Q3, Q4 and the year 2024 have none; dsc.bund.de names for 2024 return 404). The published files lose umlauts (U+FFFD in the source). [[BNetzA Overloaded Grid Elements]]
+- **Matching (A36):** `config/bnetza_elements.yaml` (element names → substation chains, written from the names only) and `src/netzfix/network/element_match.py` (OSM substation by name, snapshot 2026-11-05 as A34; homonyms resolved by the shortest chain; shortest model path between the two sites, accepted if ≤ max(2 × straight km, straight km + 20 km); border legs into FR/PL/AT whose 400 kV stations are not in the OSM query = shortest path into that country). Match run (structure only, no flows): **41 of 45 listed elements matched** (53 pairs); unmatched: Würgassen-Sandershausen/Bergshausen and Grohnde-Würgassen (Würgassen not in the OSM 220/380 kV substations), Elbe-Weser-Leitung and Region Mitte (Berlin) (no named end points); single legs missing: Maximiliansau-Goldgrund, Altheim-Simbach-AT. Matched elements carry **94.4%** of R's hours in H1 2024 and **96.2%** in 2023. Files `results/calibration_v8/t7_match.json`, `t7_match_report.csv`.
+- **Model (M):** v8 default ([[Decision Log]] 2026-11-05), α = 0.997, market flows **before redispatch** (the planning view, like PRD1), same `simulate` call as `scripts/calibrate_margin.py`. Branch-hour overloaded if |flow| > α · s_nom. Element hours = sum of overloaded hours over its matched branches (BNetzA's hours also exceed the hours of a quarter, e.g. Dörpen 8,153 h in Q1 2023, so they add up over circuits).
+- **Tests (thresholds frozen here; proposed by Claude, same level as T6b):**
+  - **T7a (H1 2024, primary):** R = Q1 + Q2 2024 hours per element (0 in a quarter where not listed); M = Jan-Jun 2024. Over matched elements listed in H1 2024: Spearman ρ(R, M) **≥ 0.50**; and of R's top-5 elements, **≥ 3** in M's top-5.
+  - **T7b (2023 vs model 2024, cross-year):** R = Q1-Q4 2023; M = full 2024; same two rules. Reported as a structural check (grid, weather and fleet differ between years).
+  - **T7c (descriptive):** share of M's overloaded branch-hours (full year) on matched listed elements; M's 15 most overloaded branches with location and element.
+- **Script:** `scripts/t7_bottlenecks.py --alpha 0.997 --out results/calibration_v8` → `results/calibration_v8/t7.json`. Later versions use the same test unchanged.
+- **Known before this entry:** the BNetzA tables (names, hours) were read; the v7 diagnostics (2026-11-04, `results/diagnostics/v7_alpha_0.991.json`) named the most binding model branches (220 kV Karlsruhe/Mannheim, Lübeck, the Austrian border), and T6c found TransnetBW 2x too high on v8. No v8 flow per element was computed.
+- **Expectation (not a test):** T7a and T7b fail: R's top elements are in the north-west (Dörpen, Ovenstädt-Bechterdissen, St. Hülfe-Ganderkesee) and at the eastern borders (Vierraden-Krajnik), while M's binding branches cluster at 220 kV in Baden-Württemberg. T7c share well below 50%.
+
+### 2026-11-06 - T7 on v8: RESULT
+- Run: laptop, `scripts/t7_bottlenecks.py --alpha 0.997 --out results/calibration_v8` at HEAD `9fb9151` plus uncommitted working tree (new downloader/parser, matching module, config A36, script; model code path unchanged since `9a33e0f`); files `results/calibration_v8/t7.json`, `t7_match.json`, `t7_match_report.csv`. `stated` (our result files)
+
+| Test | Model v8 | Threshold | Result |
+|---|---|---|---|
+| T7a H1 2024, Spearman (27 elements) | **−0.29** | ≥ 0.50 | **fail** |
+| T7a top-5 hits | **0 of 5** | ≥ 3 | **fail** |
+| T7b 2023 vs model 2024, Spearman (38 elements) | **−0.08** | ≥ 0.50 | **fail** |
+| T7b top-5 hits | **0 of 5** | ≥ 3 | **fail** |
+| T7c share of model overload branch-hours on listed elements | **14.4%** (of 26,137) | descriptive | - |
+
+| Element (real top 5) | Real H1 2024 (h) | Model Jan-Jun (h) | Real 2023 (h) | Model 2024 (h) |
+|---|---|---|---|---|
+| Dörpen (-Niederlangen-Meppen-Hanekenfähr) | 7,651 | 2 | 20,197 | 15 |
+| Vierraden-Krajnik (PL) | 2,716 | 0 | 3,064 | 0 |
+| Neuenhagen-Vierraden-Pasewalk | 1,784 | 0 | 2,913 | 0 |
+| Ensdorf-Vigy / Oberzier-Maasbracht | 1,655 | 0 | 4,499 | 0 |
+| Ovenstädt-Bechterdissen | 1,532 | 4 | 5,468 | 52 |
+| *Model top: Gebiet Daxlanden (Karlsruhe)* | - | - | 730 | **2,475** |
+
+- **Model's 15 most overloaded branches (full year, before redispatch):** 11 of 15 are **220 kV lines with the PyPSA-Eur default rating** (492 or 983 MVA): near Lübeck (53.92 N 10.70 E, 3,625 h), Karlsruhe-Daxlanden (2,475 h, the only one on a listed element), the Weser/Jade estuary (53.56 N 8.14 E, 1,880 h), Mannheim (49.44 N 8.52 E, 1,727 h), north of Hamburg, around Leipzig/Chemnitz (51.12 N 12.54 E), the Upper Rhine (48.06 N 7.66 E), near Cologne (50.86 N 6.87 E) and at the Inn on the Austrian border (48.28 N 13.06 E, three branches near Simbach; the Altheim-Simbach-AT leg is unmatched, so these may belong to the listed element "Altheim", `medium`).
+- **Reading:** as expected, T7 fails, and more clearly than expected: the ranking is **not** related (ρ near zero or negative), and the real top elements (380 kV corridors in the north-west and the eastern and western borders) are almost never overloaded in the model. The model's congestion sits on the 220 kV layer with default ratings; the real congestion sits on the 380 kV backbone and at the borders. This is consistent with T2 (the model curtails onshore, not offshore wind: Dörpen and Diele-Rhede are the landing area of the North Sea offshore links), T6c (TransnetBW too high: Daxlanden/Mannheim) and the v9 finding that line ratings drive the volume. Candidate causes (`medium`, untested): (1) default 220 kV ratings far below reality while 380 kV ratings are too high; (2) borders fixed at measured physical flows, so the model has no loop flows through PL/CZ and NL/FR; (3) PRD1 hours are an n-1 planning view, the model uses one margin on base-case flows (no contingencies).
+- **Status:** a new failing test on the v8 default; no change to the model. T7 is applied unchanged to v10+ (and could be run on the v9 network as a descriptive check; not pre-registered).
+
+### 2026-11-06 - Calibration v9b (line limits above the TSO rating; weather-adjusted maximum): PRE-REGISTRATION (before any v9b run)
+Julien (2026-11-06), after a colleague's suggestion that lines may be loaded up to 120% as a hard limit ([[2026-11-06 Colleague redispatch details]]): "we should then also show a weather adjusted max [...] go ahead with 1-4" (1 = this calibration).
+- **Question:** v9 (TSO ratings, A34) needed 34,501 GWh even at α = 1.00, so its α\* lies above the pre-registered grid. Which margin above the TSO rating reproduces 2024, and is it inside the TSOs' own weather-dependent band? Held reference (input data, not a result): German JAO circuits with DLRmin and DLRmax have **DLRmax/DLRmin median 1.24** (IQR 1.16-1.42, n = 226; computed 2026-11-06).
+- **v9b-std:** the v9 network unchanged (A34 standard ratings, A35; `NETZFIX_SCENARIO=v9.yaml`). Grid extended by **α = 1.05, 1.10, 1.15, 1.20, 1.25, 1.30** (with v9's 0.70-1.00 already run, job 5966).
+- **v9b-max (A37):** each JAO-matched circuit rated at its weather-dependent maximum: Imax = max(A34 Imax, DLRmax) where DLRmax is given; 174 of 566 rated lines raised, rated MVA 1,160,168 → 1,241,883 (+7.0%); everything else as v9 (`NETZFIX_SCENARIO=v9_dlrmax.yaml`). Grid **α = 0.85, 0.90, ..., 1.30** (10 points). Rebuilding `line_ratings_jao.csv` with the new column reproduced v9's `s_nom_jao` exactly (max difference 0; Overpass snapshot pinned to 2026-11-05).
+- **Unchanged:** target 24,565 GWh, linear interpolation between bracketing grid points, α\* rounded to 3 decimals, one run at α\*, tests T1-T5, T6 (thresholds 2026-11-05) and T7 (thresholds 2026-11-06), all on the α\* run. If the target lies outside a variant's grid: report, no extrapolation.
+- **Reading rule (fixed now):** the effective limit is α\* × rating. For v9b-std, α\* ≤ 1.24 is read as "consistent with operating within the TSOs' weather-dependent band on average"; α\* > 1.42 (upper quartile) as "needs more than weather-dependent ratings" (e.g. topology switching, phase shifters, curative measures). For v9b-max, α\* ≤ 1.00 means DLRmax ratings alone suffice.
+- **Code:** `src/netzfix/network/jao_ratings.py` (column `s_nom_jao_dlrmax`), `src/netzfix/server/state.py` (`line_ratings.variant`), `src/netzfix/config.py` (`NETZFIX_SCENARIO`), `jobs/calibrate.sh` (`GRIDLIST`), `scripts/calibrate_margin.py` (records scenario and ratings). Results `results/calibration_v9b_std/`, `results/calibration_v9b_max/`.
+- **Expectation (not a test):** v9b-std α\* about 1.05-1.10 (v8 lost ~20% of volume per +0.05 near α = 1); v9b-max α\* just below 1.00. T2/T3/T7 unchanged in direction (ratings scale lines, but do not move the bottlenecks to the 380 kV corridors).
+
+### 2026-11-06 - Calibration v10-n1 (n-1 security in redispatch): PRE-REGISTRATION (before any full-year n-1 run)
+Julien (2026-11-06): "operators try to have redundancy, so if you have 3 lines load should be distributed in a way, that if one faults, the other two can handle the load, other simulations do that with n-1?", "go ahead with 1-4" (2 = this), "maybe we can introduce slacks to make them soft constraints?"
+- **Change vs v9b-max (only this), A38:** redispatch also enforces n-1: after the loss of **one circuit** of any branch with both ends in Germany (lines and transformers; single-circuit bridges whose loss splits the grid excluded: 134 branches), every German-internal branch stays within **α_c × rating**; the remaining circuits of the tripped branch within (1 − 1/c) of that. One-circuit outage factors: `lodf_matrix` in `src/netzfix/sim/redispatch.py` (toy tests with hand-computed answers: `tests/test_security.py`, triangle 10 MW shift; one circuit of a double line splits 45/45). Constraints added lazily (worst outage per monitored branch per round), sparse LP.
+- **Base case:** every branch ≤ 100% of the A37 rating (weather-adjusted maximum; `NETZFIX_SCENARIO=v9_dlrmax.yaml`, `--alpha 1.0`). Cross-border elements and neighbour equivalents: base case only (their n-1 is handled by cross-border countertrading, which the model and the target exclude, A18).
+- **Calibrated parameter (one):** α_c, grid **1.1, 1.2, ..., 2.0** (10 points; `--n1 α_c`). Target 24,565 GWh, interpolation, rounding, one run at α_c\*, T1-T7 as before (T7 unchanged: base-case overload hours at the base limit). If the target is outside the grid: report, no extrapolation.
+- **Slack:** post-fault overloads keep the same penalty as base-case overloads (1e6 €/MW, A25: security before cost). A finite post-fault price (soft constraint, Julien's suggestion) is a separate later variant, only with a price from a held source.
+- **Smoke tests (not results), laptop, first week of 2024 (168 h), v9 standard ratings, base 1.0:** without n-1 777 GWh; with n-1 incl. cross-border elements 3,496 (α_c 1.2) and 3,171 GWh (1.4), unresolved in 167-168 h: the unrelievable post-fault overloads sat on the DK 400 kV tie transformers and the FR border lines → cross-border elements excluded from n-1 (rule above). With whole-branch instead of one-circuit outages (n-2 on double lines) the volume was larger still → one-circuit rule. After both: 1,912 / 1,387 / 1,056 GWh at α_c 1.0 / 1.2 / 1.4, unresolved 104 / 45 / 20 GWh. 33-72 s per week.
+- **Reading rule (fixed now):** α_c\* ≤ 1.2 supports the colleague's 120% as a post-fault limit on top of weather-adjusted ratings; α_c\* well above 1.2 means the model still lacks relief measures (phase shifters, switching, curative actions).
+- **Expectation (not a test):** α_c\* between 1.4 and 2.0 or above the grid; T7 may move toward the 380 kV corridors, since n-1 binds where parallel circuits share heavy flows.
+
+### 2026-11-06 - Market v1 (uniform merit order, design A market stage): PRE-REGISTRATION of V1/V2 (before any full-year market run)
+Julien (2026-11-06): "build each operators, consumers and plants behaviour like the law suggests [...] if we rebuild market incentives this could work", "go ahead with 1-4" (3 = this).
+- **Model (A39):** `src/netzfix/markets/dispatch.py`. Per hour the thermal fleet (lignite, hard coal, gas; individual units with MaStR technology + aggregated small groups costed as gas_gt / hard_coal_sub / lignite; monthly capacity `p_nom_monthly`; grid-reserve units excluded) must produce the 2024 SMARD lignite + hard coal + gas output (load, renewables, other generation and trade held at 2024 values). Cheapest first by marginal cost A30 with price set `2024_validation` (A29); uniform price = marginal cost of the last unit; shortfall hours reported, price NaN. Toy test with hand-computed answers: `tests/test_dispatch.py`.
+- **Not in v1 (known handicaps, stated now):** no CHP must-run, start-up costs, minimum load or storage; one flat annual gas price (34.64 €/MWh_th) and one hard-coal price (8.3, implied); renewables and imports do not set the price, so the model **cannot produce negative or zero prices** (real 2024 has such hours) and cannot exceed the most expensive thermal unit's cost.
+- **Checks (rules as proposed in the Checks table above):**
+  - **V1 price:** model vs SMARD `price_de_lu` 2024, hourly, over hours with a model price: Pearson r **≥ 0.8**; annual mean within **±15%**; MAE reported.
+  - **V2 generation mix:** model TWh of lignite, hard coal, gas vs SMARD 2024: each within **±20% or ±5 TWh**. (The total is fixed by construction; V2 tests the split.)
+  - Descriptive: shortfall hours; r on hours with a real price > 0.
+- **Script:** `scripts/market_v1.py --year 2024` → `results/market_v1/2024.json` (+ hourly CSV).
+- **Expectation (not a test):** V2 lignite and hard coal too high, gas too low (no must-run CHP gas, no flexibility value); V1 r about 0.6-0.8, mean too low (no scarcity markups, no negative prices to pull it down).
+
+### 2026-11-06 - Market v1: RESULT (V1/V2 on 2024)
+- Run: laptop, `scripts/market_v1.py --year 2024` at HEAD `9fb9151` + working tree (new `src/netzfix/markets/dispatch.py`, A39); files `results/market_v1/2024.json`, `2024_hourly.csv`. Fleet 1,242 thermal assets (individual + aggregated, reserve excluded). `stated` (our result files)
+
+| Check | Model | Real 2024 | Rule | Result |
+|---|---|---|---|---|
+| V1 Pearson r, hourly price (8,784 h) | **0.48** | - | ≥ 0.8 | **fail** |
+| V1 annual mean price (€/MWh) | **75.6** | 78.5 | ±15% | **pass** (−3.7%) |
+| V1 MAE (€/MWh) | 31.0 | - | reported | - |
+| V2 lignite (TWh) | **98.6** | 71.0 | ±20% or ±5 TWh | **fail** (+39%) |
+| V2 hard coal (TWh) | **47.2** | 27.3 | ±20% or ±5 TWh | **fail** (+73%) |
+| V2 gas (TWh) | **9.4** | 56.9 | ±20% or ±5 TWh | **fail** (−83%) |
+
+- Descriptive: no shortfall hour; r on hours with a real price > 0: 0.51; real 2024 has **519 hours with a price ≤ 0**, which v1 cannot produce.
+- **Reading:** as expected in direction, larger in size. A pure cost merit order with one flat gas price runs coal and lignite whenever possible and gas almost never; in reality ~57 TWh of gas ran, much of it heat-led CHP and industrial self-supply (A33: 78.6% of CHP gas output is heat-coupled). The mean price is right, the hourly shape is not (r 0.48): flat fuel prices, no must-run, and renewables/imports that never set the price. Next for the market (not pre-registered yet): CHP must-run as a lower bound (A33), monthly or daily gas prices from a held source, renewables bidding at their market-premium level (negative prices), storage.
+
+### 2026-11-06 - Out-of-sample test on 2023 (OOS-2023): PRE-REGISTRATION (before any 2023 model run)
+Julien (2026-11-06): "only doing what happened in 2024 ist not enough [...] we should use 2024 and all the other data to learn", "do the out of sample test maybe then on the server", "go ahead with 1-4" (4 = this).
+- **Principle:** every 2024-calibrated candidate is run on 2023 inputs **without re-fitting anything** (margins, rules, prices of the model stay as calibrated on 2024). Candidates: v8 (α 0.997, default), v9b-std (α\* from its 2024 run), v9b-max (α\*), v10-n1 (α_c\*, if its 2024 grid brackets the target).
+- **2023 inputs (`NETZFIX_SCENARIO=y2023.yaml`):** SMARD 2023 (held, `smard_DE_2023.parquet`), Energy-Charts physical border flows 2023 (held, `cbpf_DE_2023.parquet`), ERA5 2023 cutout (Slurm job 6916, queued) → regional profiles with A28 using the **2023 curtailment by carrier = sum of the four 2023 quarterly BNetzA tables** (held PDFs), MaStR units operating in 2023 (incl. nuclear until 15 Apr 2023), redispatch prices rows 2022/23 and 2023/24 ([[netztransparenz Kalkulatorische Preise]]; p_nr for Jan-Sep 2023 is "not applicable" in the table → the 2023/24 value 476.50 is used, it only orders reserve after market plants), **ENTSO-E per-unit output 2023 (A26 replay): not held, File Library needs Julien's login**. Unchanged and documented as limitations: the 2024 OSM grid, the 2026 grid-reserve list, the JAO 2024-09 ratings.
+- **2023 target (real):** BNetzA Q4/Gesamtjahr 2023 report, Tabelle 2 (PDF p. 8): reductions 19,057 GWh and increases 14,091 GWh (both incl. countertrading), grid reserve 1,149 GWh, renewable curtailment 10,479 GWh. Target = reductions + increases − countertrading volume 2023 (both directions; summed from the held netztransparenz 2023 measures, reasons "Countertrade", computed and written here before any 2023 model run) + reserve. Same construction as the 2024 target (countertrading excluded because border flows are fixed).
+- **Tests (thresholds fixed now):** OOS-V: model volume within **±25%** of the 2023 target; T1 (±35% around 10,479 GWh curtailment), T2 (2023 mix from the quarterly tables, ±15 pp), T3 (Q4 share of 2023, ±10 pp), T4, T5, T6a-c (netztransparenz 2023 measures, same selection and thresholds), T7b (BNetzA 2023 overloaded elements vs model 2023, same thresholds). Report the number of passes per candidate next to its 2024 in-sample count.
+- **Reading rule:** a candidate that passes OOS-V and keeps its 2024 pass count generalises; one that fails OOS-V was fitted to 2024 rather than describing the system.
+- **Runs:** chair server, `jobs/calibrate.sh` / `jobs/tests.sh` with `NETZFIX_SCENARIO` combining y2023 with each candidate's scenario. Year-parametrisation of the input paths (currently fixed to 2024 in `server/state.py`, `network/assets.py`, `data/weather_profiles.py`, `data/entsoe_units.py`) is code work still to do; it must leave every 2024 result unchanged (check: v8 α 0.997 reproduces 24,462 GWh).
+
+### 2026-11-06 - Calibration v9b: RESULT
+- Runs: chair server, grid jobs **6882** (std, α 1.05-1.30) and **6883** (max, α 0.85-1.30), α\* + T7 jobs **6911/6912**, T6 via `srun` after copying the netztransparenz files to the server (the first T6 attempt failed: files missing there). Code = `9fb9151` + working tree 2026-11-06 (`CODE_COMMIT`); during jobs 6911/6912 the server code was updated with the n-1 additions (A38), which do not touch the base-case path (smoke check: 777.1 GWh before and after). Files `results/calibration_v9b_std/`, `results/calibration_v9b_max/` (copy to the laptop pending). `stated` (our result files)
+- Grid (GWh, unresolved): **std** 1.05 → 26,988 (140); 1.10 → 20,544 (88); 1.15 → 15,397; 1.20 → 11,472; 1.25 → 8,304; 1.30 → 5,976. **max** 0.85 → 49,321; 0.90 → 38,523; 0.95 → 29,599; 1.00 → 22,679 (139); 1.05 → 17,445; ... 1.30 → 4,984.
+- **α\* (std) = 1.069**, run 24,401 GWh; **α\* (max) = 0.986**, run 24,444 GWh.
+
+| Test | v8 (OSM ratings, α 0.997) | **v9b-std (TSO rating, α 1.069)** | **v9b-max (TSO DLRmax, α 0.986)** | Real |
+|---|---|---|---|---|
+| T1 curtailment (GWh) | 6,189 pass | 5,831 **fail** | 3,800 **fail** | 9,374 |
+| T2 offshore / onshore / solar (%) | 9.5 / 75.5 / 15.0 fail | 15.1 / 76.3 / 8.6 fail | 10.7 / 83.4 / 6.0 fail | 48.9 / 36.3 / 14.9 |
+| T3 Q4 share | 54.8% fail | 54.3% fail | 50.2% fail | 34.4% |
+| T4 top-2 upward | pass | gas 4,480, coal 3,810 pass | gas 4,629, coal 4,145 pass | gas, hard coal |
+| T5 RES share of down | 50.6% pass | 47.8% **fail** | 31.1% **fail** | 64.9% |
+| T6a monthly TVD | 0.286 fail | 0.262 fail | 0.253 fail | ≤ 0.15 |
+| T6b daily Spearman | 0.483 fail | **0.529 pass** | 0.417 fail | ≥ 0.50 |
+| T6c TransnetBW share | 23.8% fail | 24.6% fail | 30.9% fail | 12.5% |
+| T7a ρ / top-5 | −0.29 / 0 fail | −0.13 / 0 fail | 0.06 / 1 fail | ≥ 0.50 / ≥ 3 |
+| T7b ρ / top-5 | −0.08 / 0 fail | −0.07 / 0 fail | −0.07 / 0 fail | ≥ 0.50 / ≥ 3 |
+| T7c share on listed elements | 14.4% | 8.2% | 6.9% | - |
+| **Passes T1-T5 / T6 / T7** | **3 / 0 / 0** | **1 / 1 / 0** | **1 / 0 / 0** | |
+
+- **Reading (rule fixed in the pre-registration):** v9b-std α\* = 1.069 ≤ 1.24 → the 2024 volume is **consistent with operating within the TSOs' weather-dependent band on average** (about 7% above the standard rating; the colleague's 120% is not needed for the volume). v9b-max α\* = 0.986 ≤ 1.00 → the DLRmax ratings alone suffice for the volume. **But the pattern gets worse, not better:** with TSO ratings the model curtails less (T1, T5 fail) and puts even more volume into Baden-Württemberg (T6c); T7 stays unrelated. The total volume is explained by ratings; where and when redispatch happens is not.
+- **Status:** v8 stays the default (most passes). The rating question is answered for the volume; the location question (T2, T6c, T7) points to the model's power flows (n-1, phase shifters, border loop flows), not to line limits.
